@@ -1,283 +1,306 @@
-# 🌐 INTERNET MEMORY
+<div align="center">
 
-### A Local, Privacy-First Knowledge Engine
+<!-- Animated Typing Header via readme-typing-svg -->
+<a href="https://github.com/Flaxmbot/Second-Brain">
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=28&duration=3000&pause=1000&color=00D4FF&center=true&vCenter=true&multiline=true&repeat=true&width=600&height=80&lines=%F0%9F%A7%A0+INTERNET+MEMORY;Your+Second+Brain+for+the+Web" alt="Internet Memory" />
+</a>
 
-*Transform your browsing into a crystalline, queryable intelligence.*
+<br/>
 
-[![Version](https://img.shields.io/badge/Version-2.0.0-orange?style=for-the-badge&logo=)](https://github.com/Flaxmbot/Second-Brain/releases)
-[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge&logo=)](LICENSE)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-green?style=for-the-badge&logo=linux&logoColor=white)
+<img src="https://readme-typing-svg.demolab.com?font=Inter&weight=400&size=16&duration=4000&pause=2000&color=888888&center=true&vCenter=true&repeat=true&width=500&height=30&lines=Privacy-first+%E2%80%A2+100%25+Local+%E2%80%A2+AI-Powered+%E2%80%A2+Zero+Cloud" alt="Tagline" />
+
+<br/><br/>
+
+[![Version](https://img.shields.io/badge/Version-0.1.0-orange?style=for-the-badge)](https://github.com/Flaxmbot/Second-Brain/releases)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-green?style=for-the-badge&logo=linux&logoColor=white)](https://github.com/Flaxmbot/Second-Brain/releases)
+
 [![Tauri](https://img.shields.io/badge/Tauri-2.0+-6929C4?style=flat-square&logo=tauri&logoColor=white)](https://tauri.app)
-[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
 [![Rust](https://img.shields.io/badge/Rust-DEA584?style=flat-square&logo=rust&logoColor=white)](https://www.rust-lang.org)
+[![Chrome](https://img.shields.io/badge/Chrome_Extension-MV3-4285F4?style=flat-square&logo=google-chrome&logoColor=white)](https://developer.chrome.com/docs/extensions/mv3/)
+[![Ollama](https://img.shields.io/badge/Ollama-Local_AI-F1682D?style=flat-square)](https://ollama.ai/)
 
----
+<br/>
 
 <a href="https://github.com/Flaxmbot/Second-Brain/stargazers">
-<img src="https://img.shields.io/github/stars/Flaxmbot/Second-Brain?style=for-the-badge&logo=github" alt="GitHub stars">
+  <img src="https://img.shields.io/github/stars/Flaxmbot/Second-Brain?style=for-the-badge&logo=github&color=1a1a2e&labelColor=0d1117" alt="GitHub stars">
 </a>
 <a href="https://github.com/Flaxmbot/Second-Brain/forks">
-<img src="https://img.shields.io/github/forks/Flaxmbot/Second-Brain?style=for-the-badge&logo=github" alt="GitHub forks">
+  <img src="https://img.shields.io/github/forks/Flaxmbot/Second-Brain?style=for-the-badge&logo=github&color=1a1a2e&labelColor=0d1117" alt="GitHub forks">
 </a>
-
-> **Your personal AI-powered memory that works 100% offline.**
 
 </div>
 
----
+<!-- Animated gradient divider -->
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=rect&color=gradient&customColorList=0,2,2,5,30&height=2&section=header" width="100%"/>
+</p>
 
-## 📖 Description
+## 🧬 What is Internet Memory?
 
-**Internet Memory** (also known as *Second Brain*) is a powerful Chrome Extension + Desktop App combination that transforms how you capture, organize, and interact with online content. Built with privacy at its core, everything stays local on your machine.
+> **A Chrome extension + lightweight system-tray backend that automatically captures, indexes, and lets you chat with everything you read online — powered by local AI.**
 
-- 🔒 **100% Local** - Your data never leaves your device
-- 🧠 **AI-Powered** - Smart extraction and conversational AI with Ollama
-- ⚡ **Fast & Efficient** - Lightweight Tauri backend with Rust
-- 🎯 **Privacy First** - Zero cloud, zero telemetry
+The desktop app runs silently in your **system tray**, serving as a mediator between the Chrome extension and your local Ollama instance. All UI/UX lives in the **browser extension's side panel**.
 
----
+<table>
+<tr>
+<td width="50%">
+
+### 🔒 Privacy by Design
+- 100% local — your data **never** leaves your machine
+- Zero cloud, zero telemetry, zero tracking
+- SQLite database stored in your app data folder
+- Authentication via API token (copy from tray icon)
+
+</td>
+<td width="50%">
+
+### ⚡ How It Works
+1. **Browse** the web normally
+2. Extension **automatically captures** articles you read
+3. Backend **embeds & indexes** content via Ollama
+4. **Chat with your knowledge** from the extension side panel
+
+</td>
+</tr>
+</table>
+
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=rect&color=gradient&customColorList=0,2,2,5,30&height=1&section=header" width="60%"/>
+</p>
 
 ## ✨ Features
 
-| | | |
-|:--|:--|:--|
-| 🧠 **Smart Knowledge Extraction** | 📺 **Multi-Media Support** | 🤖 **AI-Powered Categorization** |
-| Automatically captures and indexes web articles while filtering out noise. | Native transcript extraction for YouTube and text recovery for PDFs. | Auto-detects topics (AI/ML, Finance, Dev) using local AI models. |
-| 📊 **Knowledge Heatmap** | 💬 **Conversational Intelligence** | 🔗 **Numbered Citations** |
-| Visual GitHub-style contribution grid of your reading habits. | Chat with your entire library using local LLMs via Ollama. | Every AI response includes linked sources for verifiable truth. |
-| 🎨 **Premium UI** | 🔒 **Privacy First** | 🔍 **Full-Text Search** |
-| Dynamic Light, Dark, and System themes with customizable accent colors. | 100% local storage. Zero cloud. Zero telemetry. Your data stays yours. | Powerful search across all your saved content with instant results. |
+<table>
+<tr>
+  <td align="center" width="33%">
+    <h3>🧠 Smart Capture</h3>
+    <p>Auto-captures articles, filters noise, deduplicates URLs. Supports articles, YouTube transcripts, PDFs, GitHub repos.</p>
+  </td>
+  <td align="center" width="33%">
+    <h3>💬 Chat with Memory</h3>
+    <p>Ask questions about everything you've read. Streaming AI responses with numbered source citations.</p>
+  </td>
+  <td align="center" width="33%">
+    <h3>🤖 Local AI</h3>
+    <p>Powered by Ollama — embeddings via nomic-embed-text, chat via any local LLM. Nothing sent to the cloud.</p>
+  </td>
+</tr>
+<tr>
+  <td align="center" width="33%">
+    <h3>📊 Knowledge Graph</h3>
+    <p>Auto-extracted concepts and relationships visualized as an interactive D3 force graph.</p>
+  </td>
+  <td align="center" width="33%">
+    <h3>🔥 Reading Heatmap</h3>
+    <p>GitHub-style contribution grid showing your reading habits over the past year.</p>
+  </td>
+  <td align="center" width="33%">
+    <h3>🔍 Semantic Search</h3>
+    <p>Vector similarity + keyword search with optional AI reranking for best results.</p>
+  </td>
+</tr>
+<tr>
+  <td align="center" width="33%">
+    <h3>🏷️ Auto-Categorization</h3>
+    <p>AI detects topics (AI/ML, Finance, Dev, Science, Health) and categorizes automatically.</p>
+  </td>
+  <td align="center" width="33%">
+    <h3>✏️ Highlights</h3>
+    <p>Right-click any text → "Add to Internet Memory" to save annotated snippets.</p>
+  </td>
+  <td align="center" width="33%">
+    <h3>📤 Import/Export</h3>
+    <p>Full JSON export and import of your knowledge base for backup and migration.</p>
+  </td>
+</tr>
+</table>
 
----
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=rect&color=gradient&customColorList=0,2,2,5,30&height=1&section=header" width="60%"/>
+</p>
 
 ## 🏗️ Architecture
 
 ```mermaid
 %%{
   init: {
-    'theme': 'base',
+    'theme': 'dark',
     'themeVariables': {
-      'background': 'transparent',
-      'primaryColor': '#e1f5fe',
-      'primaryTextColor': '#0d47a1',
-      'primaryBorderColor': '#01579b',
-      'lineColor': '#666666',
-      'secondaryColor': '#e8f5e9',
-      'secondaryTextColor': '#1b5e20',
-      'secondaryBorderColor': '#1b5e20',
-      'tertiaryColor': '#fff3e0',
-      'tertiaryTextColor': '#e65100',
-      'tertiaryBorderColor': '#e65100'
+      'primaryColor': '#1a1a2e',
+      'primaryTextColor': '#00d4ff',
+      'primaryBorderColor': '#333',
+      'lineColor': '#555',
+      'secondaryColor': '#16213e',
+      'tertiaryColor': '#0f3460'
     }
   }
 }%%
-flowchart TB
-    subgraph Frontend["📱 FRONTEND - Chrome Extension"]
+flowchart LR
+    subgraph EXT["🌐 Chrome Extension"]
         direction TB
-        popup[("🎯 Popup<br/>Quick Access")]
-        sidepanel[("📑 Sidepanel<br/>Deep Insights")]
-        options[("⚙️ Options<br/>Settings & Themes")]
-        content[("📝 Content Scripts<br/>Capture & Annotation")]
-        capture[("🔄 Capture Service<br/>Content Indexing")]
-        
-        popup --> capture
-        sidepanel --> capture
-        options --> capture
-        content --> capture
+        SP["📑 Side Panel<br/>Full UI/UX"]
+        BG["⚙️ Background<br/>Auto-Capture"]
+        CT["📝 Content Script<br/>Page Extraction"]
     end
     
-    Frontend -->|"HTTP/REST API"| Backend["⚡ BACKEND - Tauri Desktop App"]
-    
-    subgraph Backend["⚡ BACKEND - Tauri Desktop App"]
-        direction TB
-        axum[("🌐 Axum Server<br/>(:11435)")]
-        
-        subgraph Axum["Axum Server Components"]
-            rest[("📡 REST API<br/>Endpoints")]
-            auth[("🔐 Auth<br/>Handler")]
-            storage[("💾 Storage<br/>Manager")]
-            embeddings[("🧠 Embeddings<br/>Generator")]
-        end
-        
-        axum --> rest
-        axum --> auth
-        axum --> storage
-        axum --> embeddings
-        
-        tray[("🖥️ System Tray<br/>Background Operation")]
-        db[("🗄️ SQLite<br/>(WAL Mode)")]
-        
-        storage --> db
-        embeddings --> db
-    end
-    
-    Backend -->|"🔁 Inference Requests"| Ollama["🤖 AI PROVIDER - Ollama"]
-    
-    subgraph Ollama["🤖 AI PROVIDER - Ollama"]
-        direction TB
-        ollama[("🦙 Ollama<br/>(:11434)")]
-        
-        subgraph OllamaComp["Ollama Components"]
-            llm[("💬 LLM Models<br/>Chat/Reasoning")]
-            emb[("📊 Embeddings<br/>nomic-embed-text")]
-            stream[("🌊 Streaming Response<br/>SSE Support")]
-        end
-        
-        ollama --> llm
-        ollama --> emb
-        ollama --> stream
-    end
-    
-    style Frontend fill:#e1f5fe,stroke:#01579b,stroke-width:2px
-    style Backend fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
-    style Ollama fill:#fff3e0,stroke:#e65100,stroke-width:2px
-```
+    EXT -->|"HTTP :11435"| TRAY
 
----
+    subgraph TRAY["🖥️ System Tray App"]
+        direction TB
+        AX["🦀 Axum Server"]
+        DB["🗄️ SQLite"]
+        AX --> DB
+    end
+
+    TRAY -->|":11434"| OL["🤖 Ollama<br/>Local LLMs"]
+```
+> **Extension** handles all UI · **Tray App** is a headless mediator · **Ollama** provides AI
+
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=rect&color=gradient&customColorList=0,2,2,5,30&height=1&section=header" width="60%"/>
+</p>
 
 ## ⚡ Quick Start
 
 ### Prerequisites
 
-Before installing Internet Memory, ensure you have the following:
+| Requirement | Version | Purpose |
+|:------------|:--------|:--------|
+| **Ollama** | Latest | Local AI inference — [download here](https://ollama.ai/) |
+| **Chrome / Edge** | 110+ | Browser with extension support |
+| **Node.js** | ≥ 18 | Only for building from source |
+| **Rust** | ≥ 1.70 | Only for building from source |
 
-| Requirement | Version | Notes |
-|------------|---------|-------|
-| **Node.js** | ≥ 18.0 | For building the frontend |
-| **Rust** | ≥ 1.70 | For Tauri backend |
-| **Ollama** | Latest | [Download](https://ollama.ai/) |
-| **Browser** | Chrome/Edge 110+ | For the extension |
+### Option A: Download Pre-built
 
-### Installation
+<details>
+<summary><b>📦 Download the latest release for your platform</b></summary>
 
-#### 1. Clone the Repository
+| Platform | Architecture | Download |
+|:---------|:-------------|:---------|
+| 🪟 **Windows** | x64 | [Download .msi / .exe](https://github.com/Flaxmbot/Second-Brain/releases) |
+| 🍎 **macOS** | Apple Silicon | [Download .dmg](https://github.com/Flaxmbot/Second-Brain/releases) |
+| 🍎 **macOS** | Intel | [Download .dmg](https://github.com/Flaxmbot/Second-Brain/releases) |
+| 🐧 **Linux** | x64 | [Download .deb / .AppImage / .rpm](https://github.com/Flaxmbot/Second-Brain/releases) |
+
+</details>
+
+### Option B: Build from Source
+
+<details>
+<summary><b>🔧 Build instructions</b></summary>
 
 ```bash
+# Clone
 git clone https://github.com/Flaxmbot/Second-Brain.git
 cd Second-Brain
-```
 
-#### 2. Install Dependencies
-
-```bash
-# Install Node.js dependencies
+# Install dependencies
 npm install
 
-# Install Rust dependencies
-cd src-tauri
-cargo install --locked
-```
+# Pull Ollama models
+ollama pull nomic-embed-text   # Required — embeddings
+ollama pull llama3.2           # Recommended — chat
 
-#### 3. Pull Ollama Models
-
-```bash
-# Pull the embedding model (required)
-ollama pull nomic-embed-text
-
-# Pull a chat model (recommended)
-ollama pull llama3.2
-```
-
-#### 4. Build & Run
-
-```bash
-# Development mode
+# Development
 npm run tauri dev
 
 # Production build
 npm run tauri build
 ```
 
-#### 5. Install Browser Extension
+</details>
+
+### Install the Chrome Extension
 
 1. Open `chrome://extensions`
-2. Enable **Developer mode** (top right)
-3. Click **Load unpacked**
-4. Select the `extension/` folder from your project
+2. Enable **Developer mode** (top right toggle)
+3. Click **Load unpacked** → select the `extension/` folder
+4. Right-click extension icon → **Options** → paste API token from tray menu
 
-#### 6. Authenticate
-
-1. Right-click the extension icon → **Options**
-2. Enter the API Token from the Tauri app system tray menu
-3. Click **Save**
-
----
-
-## 📥 Download
-
-Choose your platform:
-
-| Platform | Architecture | Download |
-|----------|--------------|----------|
-| 🪟 **Windows** | x64 | [Download .exe](https://github.com/Flaxmbot/Second-Brain/releases) |
-| 🍎 **macOS** | Apple Silicon (M1/M2/M3) | [Download .dmg](https://github.com/Flaxmbot/Second-Brain/releases) |
-| 🍎 **macOS** | Intel | [Download .dmg](https://github.com/Flaxmbot/Second-Brain/releases) |
-| 🐧 **Linux** | AppImage | [Download .AppImage](https://github.com/Flaxmbot/Second-Brain/releases) |
-| 🐧 **Linux** | Debian | [Download .deb](https://github.com/Flaxmbot/Second-Brain/releases) |
-| 🐧 **Linux** | RPM | [Download .rpm](https://github.com/Flaxmbot/Second-Brain/releases) |
-
----
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=rect&color=gradient&customColorList=0,2,2,5,30&height=1&section=header" width="60%"/>
+</p>
 
 ## 🛠️ Tech Stack
 
 <div align="center">
 
-| Category | Technology | Description |
-|----------|------------|-------------|
-| 💻 **Backend** | ![Rust](https://img.shields.io/badge/Rust-000000?style=flat&logo=rust) **Rust** | High-performance backend with memory safety |
-| 🪟 **Framework** | ![Tauri](https://img.shields.io/badge/Tauri-2.0+-6929C4?style=flat&logo=tauri) **Tauri v2** | Lightweight desktop app framework |
-| 🎨 **Frontend** | ![React](https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react) **React 19** | Modern UI library with hooks |
-| 🎭 **Styling** | ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat&logo=css3) **CSS3** | Custom properties & animations |
-| 🗄️ **Database** | ![SQLite](https://img.shields.io/badge/SQLite-003B57?style=flat&logo=sqlite) **SQLite** | Local ACID-compliant storage |
-| 🤖 **AI/ML** | ![Ollama](https://img.shields.io/badge/Ollama-F1682D?style=flat) **Ollama** | Local LLM & embeddings inference |
-| 🌐 **Server** | ![Axum](https://img.shields.io/badge/Axum-000000?style=flat) **Axum** | Ergonomic Rust web framework |
-| 🔌 **Extension** | ![Chrome](https://img.shields.io/badge/Chrome-4285F4?style=flat&logo=google-chrome) **Web Extensions** | Cross-browser extension API |
+| Layer | Technology | Role |
+|:------|:-----------|:-----|
+| 🦀 **Backend** | Rust + Tauri v2 | System tray app, HTTP server |
+| 🌐 **Server** | Axum | REST API on `:11435` |
+| 🗄️ **Database** | SQLite (WAL) | Local ACID-compliant storage |
+| 🤖 **AI** | Ollama | Local LLM + embeddings |
+| 🔌 **Extension** | Chrome MV3 | Side panel UI, auto-capture |
+| 🎨 **Extension UI** | HTML/CSS/JS | Side panel, options, popup |
 
 </div>
 
----
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=rect&color=gradient&customColorList=0,2,2,5,30&height=1&section=header" width="60%"/>
+</p>
+
+## 📡 API Reference
+
+The tray app exposes a REST API on `http://localhost:11435`. All endpoints (except `/api/status`) require an `Authorization: Bearer <token>` header.
+
+<details>
+<summary><b>View all API endpoints</b></summary>
+
+| Method | Endpoint | Description |
+|:-------|:---------|:------------|
+| `GET` | `/api/status` | Health check & Ollama status |
+| `GET` | `/api/models` | List Ollama models |
+| `POST` | `/api/capture` | Capture article content |
+| `POST` | `/api/check-url` | Check if URL already captured |
+| `POST` | `/api/query` | Query memory (non-streaming) |
+| `POST` | `/api/query/stream` | Query memory (SSE streaming) |
+| `GET` | `/api/articles` | List articles (paginated) |
+| `GET` | `/api/articles/:id` | Get single article |
+| `DELETE` | `/api/articles/:id` | Delete article |
+| `GET` | `/api/timeline` | Timeline view |
+| `GET` | `/api/stats` | Dashboard statistics |
+| `GET` | `/api/graph` | Knowledge graph data |
+| `GET` | `/api/heatmap` | Reading heatmap |
+| `GET` | `/api/categories` | Category breakdown |
+| `GET` | `/api/related/:id` | Related articles |
+| `POST` | `/api/highlights` | Save highlight |
+| `GET` | `/api/highlights/:id` | Get highlights for article |
+| `GET` | `/api/settings` | Get settings |
+| `POST` | `/api/settings` | Update settings |
+| `GET` | `/api/export` | Export all data (JSON) |
+| `POST` | `/api/import` | Import data (JSON) |
+| `GET` | `/api/conversations` | List conversations |
+| `POST` | `/api/conversations` | Create conversation |
+| `GET` | `/api/conversations/:id/messages` | Get conversation messages |
+
+</details>
+
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=rect&color=gradient&customColorList=0,2,2,5,30&height=1&section=header" width="60%"/>
+</p>
 
 ## 🤝 Contributing
 
-Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**!
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-### Ways to Contribute
-
-| Method | Description |
-|--------|-------------|
-| 🐛 **Report Bugs** | Open an issue with detailed reproduction steps |
+| How | Description |
+|:----|:------------|
+| 🐛 **Report Bugs** | [Open an issue](https://github.com/Flaxmbot/Second-Brain/issues) with reproduction steps |
 | 💡 **Request Features** | Suggest new functionality |
-| 📖 **Improve Documentation** | Fix typos, add examples |
-| 🔧 **Submit PRs** | Fork the repo and submit improvements |
+| 🔧 **Submit PRs** | Fork → branch → commit → PR |
 
-### Development Setup
-
-```bash
-# Fork the repository
-# Clone your fork
-git clone https://github.com/YOUR_USERNAME/Second-Brain.git
-
-# Create a feature branch
-git checkout -b feature/amazing-feature
-
-# Make your changes and commit
-git commit -m 'Add some amazing feature'
-
-# Push to the branch
-git push origin feature/amazing-feature
-
-# Open a Pull Request
-```
-
-Please read our [Contributing Guidelines](CONTRIBUTING.md) for details.
-
----
-
-## 📄 License
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=rect&color=gradient&customColorList=0,2,2,5,30&height=1&section=header" width="60%"/>
+</p>
 
 <div align="center">
 
-[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+## 📄 License
+
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 
 **Internet Memory** is open source under the [MIT License](LICENSE).
 
@@ -285,6 +308,6 @@ Copyright © 2024-present [Flaxmbot](https://github.com/Flaxmbot)
 
 ---
 
-*Built with ❤️ by [Flaxmbot](https://github.com/Flaxmbot)*
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=400&size=14&duration=3000&pause=5000&color=555555&center=true&vCenter=true&repeat=true&width=350&height=25&lines=Built+with+%E2%9D%A4%EF%B8%8F+by+Flaxmbot" alt="Built with love" />
 
 </div>

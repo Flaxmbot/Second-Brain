@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "Internet Memory",
-    "version": "2.0.0",
+    "version": "0.1.0",
     "description": "Your AI-powered second brain. Automatically remembers everything you read online.",
     "content_security_policy": {
         "extension_pages": "script-src 'self'; object-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com"

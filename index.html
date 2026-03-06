@@ -3,15 +3,100 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Internet Memory — Your Second Brain</title>
-  <meta name="description" content="A privacy-first personal AI engine that remembers everything you learn online." />
+  <title>Internet Memory</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0a0a0f;
+      color: #e0e0e6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      text-align: center;
+      padding: 48px;
+      max-width: 480px;
+    }
+
+    .icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #00d4ff, #7c3aed);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    p {
+      font-size: 13px;
+      color: #888;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      background: rgba(0, 212, 255, 0.08);
+      border: 1px solid rgba(0, 212, 255, 0.15);
+      font-size: 12px;
+      color: #00d4ff;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #00d4ff;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.3;
+      }
+    }
+  </style>
 </head>
 
 <body>
-  <div id="root"></div>
-  <script type="module" src="/src/main.jsx"></script>
+  <div class="container">
+    <div class="icon">🧠</div>
+    <h1>Internet Memory</h1>
+    <p>
+      The server is running in your system tray.<br />
+      Use the Chrome extension to capture and query your knowledge.
+    </p>
+    <div class="status">
+      <div class="dot"></div>
+      Server active on port 11435
+    </div>
+  </div>
 </body>
 
 </html>
