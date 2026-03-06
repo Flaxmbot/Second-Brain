@@ -88,10 +88,10 @@ jobs:
         include:
           - platform: 'macos-latest'
             target: 'x86_64-apple-darwin'
-            bundle: 'dmg,app'
+            bundle: 'dmg'
           - platform: 'macos-latest'
             target: 'aarch64-apple-darwin'
-            bundle: 'dmg,app'
+            bundle: 'dmg'
 
     runs-on: ${{ matrix.platform }}
 
