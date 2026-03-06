@@ -55,14 +55,15 @@ jobs:
         id: version
         run: echo "VERSION=$(node -p 'require("./package.json").version')" >> $GITHUB_OUTPUT
 
-      - name: Build Tauri app and create release
-        uses: tauri-apps/tauri-action@v0.5
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build Tauri app
+        run: npx @tauri-apps/cli build --target ${{ matrix.target }} --bundles ${{ matrix.bundle }}
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: 'Second Brain v${{ steps.version.outputs.VERSION }}'
-          releaseBody: |
+          tag_name: ${{ github.ref_name }}
+          name: 'Second Brain v${{ steps.version.outputs.VERSION }}'
+          body: |
             Download the latest release of Second Brain.
             
             ## Installation
@@ -76,9 +77,11 @@ jobs:
             | Windows | MSI, NSIS | x64 |
             | macOS | DMG | x64, Apple Silicon (ARM64) |
             | Linux | DEB, AppImage, RPM | x64 |
-          releaseDraft: false
+          draft: false
           prerelease: false
-          args: '--target ${{ matrix.target }} --bundles ${{ matrix.bundle }}'
+          files: src-tauri/target/${{ matrix.target }}/release/bundle/**/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # Build macOS - just builds and uploads artifacts
   build-macos:
@@ -118,12 +121,8 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
-      - name: Install Tauri CLI
-        run: npm install -g @tauri-apps/cli@latest
-
       - name: Build Tauri app
-        run: |
-          npm run tauri build -- --target ${{ matrix.target }} --bundles ${{ matrix.bundle }}
+        run: npx @tauri-apps/cli build --target ${{ matrix.target }} --bundles ${{ matrix.bundle }}
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
@@ -179,12 +178,8 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
-      - name: Install Tauri CLI
-        run: npm install -g @tauri-apps/cli@latest
-
       - name: Build Tauri app
-        run: |
-          npm run tauri build -- --target ${{ matrix.target }} --bundles ${{ matrix.bundle }}
+        run: npx @tauri-apps/cli build --target ${{ matrix.target }} --bundles ${{ matrix.bundle }}
 
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
