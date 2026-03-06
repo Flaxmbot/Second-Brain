@@ -13,7 +13,8 @@ env:
   TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
 jobs:
-  build:
+  # Build Windows - creates the release with Windows bundles
+  build-windows:
     strategy:
       fail-fast: false
       matrix:
@@ -21,12 +22,121 @@ jobs:
           - platform: 'windows-latest'
             target: 'x86_64-pc-windows-msvc'
             bundle: 'msi,nsis'
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Setup Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Install Tauri CLI
+        run: npm install -g @tauri-apps/cli@latest
+
+      - name: Extract version
+        id: version
+        run: echo "VERSION=$(node -p 'require("./package.json").version')" >> $GITHUB_OUTPUT
+
+      - name: Build Tauri app and create release
+        uses: tauri-apps/tauri-action@v0.5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Second Brain v${{ steps.version.outputs.VERSION }}'
+          releaseBody: |
+            Download the latest release of Second Brain.
+            
+            ## Installation
+            - **Windows**: Download the MSI or NSIS installer
+            - **macOS**: Download the DMG or drag the app to Applications
+            - **Linux**: Download the DEB, AppImage, or RPM package
+            
+            ## Available Installers
+            | Platform | Type | Architecture |
+            |----------|------|--------------|
+            | Windows | MSI, NSIS | x64 |
+            | macOS | DMG | x64, Apple Silicon (ARM64) |
+            | Linux | DEB, AppImage, RPM | x64 |
+          releaseDraft: false
+          prerelease: false
+          args: '--target ${{ matrix.target }} --bundles ${{ matrix.bundle }}'
+
+  # Build macOS - just builds and uploads artifacts
+  build-macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
           - platform: 'macos-latest'
             target: 'x86_64-apple-darwin'
             bundle: 'dmg,app'
           - platform: 'macos-latest'
             target: 'aarch64-apple-darwin'
             bundle: 'dmg,app'
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Setup Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Install Tauri CLI
+        run: npm install -g @tauri-apps/cli@latest
+
+      - name: Build Tauri app
+        run: |
+          npm run tauri build -- --target ${{ matrix.target }} --bundles ${{ matrix.bundle }}
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-bundles-${{ matrix.target }}
+          path: src-tauri/target/${{ matrix.target }}/release/bundle/**/*
+
+  # Build Linux - just builds and uploads artifacts
+  build-linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
           - platform: 'ubuntu-22.04'
             target: 'x86_64-unknown-linux-gnu'
             bundle: 'deb,appimage,rpm'
@@ -53,8 +163,7 @@ jobs:
         with:
           workspaces: './src-tauri -> target'
 
-      - name: Install Linux build dependencies (Ubuntu only)
-        if: matrix.platform == 'ubuntu-22.04'
+      - name: Install Linux build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -73,34 +182,111 @@ jobs:
       - name: Install Tauri CLI
         run: npm install -g @tauri-apps/cli@latest
 
-      - name: Extract version
-        id: version
-        run: echo "VERSION=$(node -p 'require("./package.json").version')" >> $GITHUB_OUTPUT
-
       - name: Build Tauri app
-        uses: tauri-apps/tauri-action@v0.5
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tagName: ${{ github.ref_name }}
-          releaseName: 'Second Brain v${{ steps.version.outputs.VERSION }}'
-          releaseBody: |
-            Download the latest release of Second Brain.
-            
-            ## Installation
-            - **Windows**: Download the MSI or NSIS installer
-            - **macOS**: Download the DMG or drag the app to Applications
-            - **Linux**: Download the DEB, AppImage, or RPM package
-            
-            ## Available Installers
-            | Platform | Type | Architecture |
-            |----------|------|--------------|
-            | Windows | MSI, NSIS | x64 |
-            | macOS | DMG | x64, Apple Silicon (ARM64) |
-            | Linux | DEB, AppImage, RPM | x64 |
-          releaseDraft: false
-          prerelease: false
-          args: '--target ${{ matrix.target }} --bundles ${{ matrix.bundle }}'
+        run: |
+          npm run tauri build -- --target ${{ matrix.target }} --bundles ${{ matrix.bundle }}
 
-  # Release is created automatically by tauri-action for each tag
-  # All platform artifacts are uploaded as release assets
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-bundles
+          path: src-tauri/target/${{ matrix.target }}/release/bundle/**/*
+
+  # Add macOS and Linux artifacts to the release created by Windows job
+  add-assets-to-release:
+    needs: [build-windows, build-macos, build-linux]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download macOS artifacts (x64)
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-bundles-x86_64-apple-darwin
+          path: macos-bundle/x64
+
+      - name: Download macOS artifacts (ARM64)
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-bundles-aarch64-apple-darwin
+          path: macos-bundle/arm64
+
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-bundles
+          path: linux-bundle
+
+      - name: List downloaded files
+        run: |
+          echo "=== macOS x64 ==="
+          ls -la macos-bundle/x64/
+          echo "=== macOS ARM64 ==="
+          ls -la macos-bundle/arm64/
+          echo "=== Linux ==="
+          ls -la linux-bundle/
+
+      - name: Upload macOS x64 artifacts to release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            const artifacts = fs.readdirSync('macos-bundle/x64');
+            for (const artifact of artifacts) {
+              const artifactPath = path.join('macos-bundle/x64', artifact);
+              if (fs.statSync(artifactPath).isFile()) {
+                console.log(`Uploading: ${artifact}`);
+                await github.rest.repos.uploadReleaseAsset({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  release_id: context.payload.release.id,
+                  name: path.basename(artifact),
+                  data: fs.readFileSync(artifactPath)
+                });
+              }
+            }
+
+      - name: Upload macOS ARM64 artifacts to release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            const artifacts = fs.readdirSync('macos-bundle/arm64');
+            for (const artifact of artifacts) {
+              const artifactPath = path.join('macos-bundle/arm64', artifact);
+              if (fs.statSync(artifactPath).isFile()) {
+                console.log(`Uploading: ${artifact}`);
+                await github.rest.repos.uploadReleaseAsset({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  release_id: context.payload.release.id,
+                  name: path.basename(artifact),
+                  data: fs.readFileSync(artifactPath)
+                });
+              }
+            }
+
+      - name: Upload Linux artifacts to release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            const artifacts = fs.readdirSync('linux-bundle');
+            for (const artifact of artifacts) {
+              const artifactPath = path.join('linux-bundle', artifact);
+              if (fs.statSync(artifactPath).isFile()) {
+                console.log(`Uploading: ${artifact}`);
+                await github.rest.repos.uploadReleaseAsset({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  release_id: context.payload.release.id,
+                  name: path.basename(artifact),
+                  data: fs.readFileSync(artifactPath)
+                });
+              }
+            }
