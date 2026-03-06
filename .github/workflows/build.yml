@@ -48,15 +48,12 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
-      - name: Install Tauri CLI
-        run: npm install -g @tauri-apps/cli@latest
-
       - name: Extract version
         id: version
         run: echo "VERSION=$(node -p 'require("./package.json").version')" >> $GITHUB_OUTPUT
 
       - name: Build Tauri app
-        run: cd src-tauri && npx @tauri-apps/cli build --target ${{ matrix.target }} --bundles ${{ matrix.bundle }}
+        run: npm run tauri build -- --target ${{ matrix.target }} --bundles ${{ matrix.bundle }}
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -122,7 +119,7 @@ jobs:
         run: npm ci
 
       - name: Build Tauri app
-        run: cd src-tauri && npx @tauri-apps/cli build --target ${{ matrix.target }} --bundles ${{ matrix.bundle }}
+        run: npm run tauri build -- --target ${{ matrix.target }} --bundles ${{ matrix.bundle }}
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
@@ -179,7 +176,7 @@ jobs:
         run: npm ci
 
       - name: Build Tauri app
-        run: cd src-tauri && npx @tauri-apps/cli build --target ${{ matrix.target }} --bundles ${{ matrix.bundle }}
+        run: npm run tauri build -- --target ${{ matrix.target }} --bundles ${{ matrix.bundle }}
 
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
