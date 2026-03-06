@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Internet Memory - Settings</title>
+    <style>
+        :root {
+            --bg: #0a0c14;
+            --bg-secondary: #131520;
+            --border: #1e2235;
+            --text: #ffffff;
+            --text-secondary: #94a3b8;
+            --accent: #00d4ff;
+            --radius-sm: 8px;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            padding: 30px;
+            border-radius: var(--radius-sm);
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 4px;
+        }
+
+        button {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .status {
+            margin-top: 15px;
+            color: var(--accent);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Internet Memory Settings</h1>
+        <p style="color: var(--text-secondary); margin-bottom: 24px;">Configure your personal knowledge engine.</p>
+
+        <section>
+            <h3 style="margin-bottom: 12px; font-size: 16px;">Connection</h3>
+            <div class="form-group">
+                <label for="api-url">Server API URL</label>
+                <input type="text" id="api-url" placeholder="http://localhost:11435">
+            </div>
+            <div class="form-group">
+                <label for="api-token">API Token (Copy from System Tray Menu)</label>
+                <input type="password" id="api-token" placeholder="Paste your API Token here">
+            </div>
+        </section>
+
+        <section style="margin-top: 30px;">
+            <h3 style="margin-bottom: 12px; font-size: 16px;">AI Engine</h3>
+            <div class="form-group">
+                <label for="embed-model">Embedding Model</label>
+                <input type="text" id="embed-model" placeholder="nomic-embed-text">
+                <p style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">Recommended:
+                    <code>nomic-embed-text</code> or <code>mxbai-embed-large</code>
+                </p>
+            </div>
+            <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+                <input type="checkbox" id="auto-categorize" style="width: auto;">
+                <label for="auto-categorize" style="margin-bottom: 0;">Auto-categorize captured pages</label>
+            </div>
+            <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+                <input type="checkbox" id="rerank-enabled" style="width: auto;">
+                <label for="rerank-enabled" style="margin-bottom: 0;">Use AI Re-ranking for Search (Slower but
+                    accurate)</label>
+            </div>
+        </section>
+
+        <section style="margin-top: 30px;">
+            <h3 style="margin-bottom: 12px; font-size: 16px;">Appearance</h3>
+            <div class="form-group">
+                <label for="theme-select">Theme</label>
+                <select id="theme-select"
+                    style="width: 100%; padding: 10px; background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 4px;">
+                    <option value="system">System Default</option>
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="accent-color">Accent Color</label>
+                <input type="color" id="accent-color" style="height: 40px; padding: 2px;">
+            </div>
+        </section>
+
+        <section style="margin-top: 30px;">
+            <h3 style="margin-bottom: 12px; font-size: 16px;">Storage & Privacy</h3>
+            <div
+                style="background: var(--bg); padding: 15px; border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: var(--text-secondary);">Database Size:</span>
+                    <span id="db-size-val">Calculating...</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-secondary);">Total Memories:</span>
+                    <span id="memories-count-val">...</span>
+                </div>
+            </div>
+            <button id="clear-history-btn"
+                style="background: transparent; border: 1px solid var(--border); color: var(--text-secondary); width: 100%; margin-top: 10px;">Clear
+                All Memories & History</button>
+            <p style="font-size: 11px; color: var(--text-secondary); margin-top: 8px; text-align: center;">This action
+                is permanent and cannot be undone.</p>
+        </section>
+
+        <div style="margin-top: 40px; display: flex; align-items: center; gap: 15px;">
+            <button id="save-btn">Save Settings</button>
+            <div id="status" class="status"></div>
+        </div>
+    </div>
+    <script src="options.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internet Memory</title>
+    <link rel="stylesheet" href="fullpage.css">
+    <link rel="stylesheet" href="lib/katex.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;450;500;600;700&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <div class="logo-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                        <path
+                            d="M12 2a4 4 0 0 1 4 4c0 .74-.2 1.44-.57 2.04A4 4 0 0 1 18 12a4 4 0 0 1-2.56 3.74A4 4 0 0 1 12 22a4 4 0 0 1-3.44-6.26A4 4 0 0 1 6 12a4 4 0 0 1 2.57-3.96A4.01 4.01 0 0 1 8 6a4 4 0 0 1 4-4z" />
+                    </svg>
+                </div>
+                <span>Internet <span class="accent">Memory</span></span>
+            </div>
+
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-tab="chat">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
+                    AI Chat
+                </button>
+                <button class="nav-item" data-tab="timeline">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                    Timeline
+                </button>
+                <button class="nav-item" data-tab="library">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                    </svg>
+                    Library
+                </button>
+                <button class="nav-item" data-tab="stats">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                    </svg>
+                    Dashboard
+                </button>
+            </nav>
+
+            <div class="sidebar-history scroll-content"
+                style="flex: 1; border-top: 1px solid var(--border); overflow-y: auto; padding: 14px 10px 0; margin-top: 10px; display: flex; flex-direction: column;">
+                <div class="history-header"
+                    style="padding: 0 4px 10px; font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: flex; justify-content: space-between; align-items: center;">
+                    Recent Chats
+                    <button class="new-chat-btn" onclick="startNewChat()"
+                        style="background: none; border: none; color: var(--accent); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 2px;"
+                        title="New Chat">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div id="sidebar-history-list" style="display: flex; flex-direction: column; gap: 2px;"></div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span
+                        style="font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Auto-Capture</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="capture-toggle-fs" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div id="connection-status" class="conn-status">
+                    <div class="status-dot"></div>
+                    <span>Checking...</span>
+                </div>
+                <div id="memory-count" class="mem-count">0 memories</div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Chat View -->
+            <div id="view-chat" class="view active">
+                <div class="chat-header">
+                    <div class="chat-title">
+                        <div class="ai-icon-small">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                <path
+                                    d="M12 2a4 4 0 0 1 4 4c0 .74-.2 1.44-.57 2.04A4 4 0 0 1 18 12a4 4 0 0 1-2.56 3.74A4 4 0 0 1 12 22a4 4 0 0 1-3.44-6.26A4 4 0 0 1 6 12a4 4 0 0 1 2.57-3.96A4.01 4.01 0 0 1 8 6a4 4 0 0 1 4-4z" />
+                            </svg>
+                        </div>
+                        Memory Assistant
+                    </div>
+                    <select id="model-select" class="model-select">
+                        <option value="">Loading models...</option>
+                    </select>
+                </div>
+
+                <div id="chat-messages" class="chat-messages">
+                    <div class="welcome-message">
+                        <div class="welcome-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.2">
+                                <path
+                                    d="M12 2a4 4 0 0 1 4 4c0 .74-.2 1.44-.57 2.04A4 4 0 0 1 18 12a4 4 0 0 1-2.56 3.74A4 4 0 0 1 12 22a4 4 0 0 1-3.44-6.26A4 4 0 0 1 6 12a4 4 0 0 1 2.57-3.96A4.01 4.01 0 0 1 8 6a4 4 0 0 1 4-4z" />
+                                <path d="M12 2v20" />
+                            </svg>
+                        </div>
+                        <h2>What would you like to recall?</h2>
+                        <p>I search everything you've read online and give you answers with sources.</p>
+                        <div class="suggestion-chips">
+                            <button class="suggestion" onclick="askSuggestion(this)">What did I read about AI
+                                agents?</button>
+                            <button class="suggestion" onclick="askSuggestion(this)">Summarize my recent
+                                readings</button>
+                            <button class="suggestion" onclick="askSuggestion(this)">What topics have I
+                                explored?</button>
+                            <button class="suggestion" onclick="askSuggestion(this)">What were the key ideas from last
+                                week?</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-input-area">
+                    <div class="input-container">
+                        <textarea id="chat-input" placeholder="Ask about your memories..." rows="1"></textarea>
+                        <div class="input-actions">
+                            <button id="web-search-btn" onclick="searchWebFallback()" title="Search Web"
+                                style="background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <path
+                                        d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+                                    </path>
+                                    <path d="M2 12h20"></path>
+                                </svg>
+                            </button>
+                            <button id="send-btn" onclick="sendMessage()" disabled title="Send message">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <line x1="22" y1="2" x2="11" y2="13" />
+                                    <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="input-meta">
+                        <span class="char-count" id="char-count"></span>
+                        <span class="powered-by">Powered by local AI · Your data stays on your machine</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeline View -->
+            <div id="view-timeline" class="view">
+                <div class="view-header">
+                    <h2>Activity Timeline</h2>
+                </div>
+                <div id="timeline-content" class="scroll-content">
+                    <div class="loading">
+                        <div class="spinner"></div><span>Loading timeline...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Library View -->
+            <div id="view-library" class="view">
+                <div class="view-header">
+                    <h2>Your Library</h2>
+                    <div class="search-wrapper-inline">
+                        <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="7" />
+                            <path d="M21 21l-4.35-4.35" />
+                        </svg>
+                        <input id="library-search" type="text" placeholder="Search memories..." />
+                    </div>
+                </div>
+                <div id="library-content" class="scroll-content">
+                    <div class="loading">
+                        <div class="spinner"></div><span>Loading library...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats View -->
+            <div id="view-stats" class="view">
+                <div class="view-header">
+                    <h2>Dashboard</h2>
+                </div>
+                <div id="stats-content" class="scroll-content">
+                    <div class="loading">
+                        <div class="spinner"></div><span>Loading stats...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Article Detail View -->
+            <div id="view-article-detail" class="view"></div>
+        </main>
+    </div>
+
+    <script src="lib/marked.min.js"></script>
+    <script src="lib/katex.min.js"></script>
+    <script src="sidepanel.js"></script>
+</body>
+
+</html>

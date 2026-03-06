@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Internet Memory</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup">
+    <div class="popup-header">
+      <div class="popup-logo">🧠</div>
+      <h1>Internet Memory</h1>
+    </div>
+
+    <div id="status" class="status"></div>
+
+    <button id="captureBtn" class="capture-btn">
+      <span class="btn-icon">📥</span>
+      Save to Memory
+    </button>
+
+    <div id="result" class="result" style="display: none;"></div>
+
+    <div class="popup-footer">
+      <div id="connectionStatus" class="connection">Checking connection...</div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
