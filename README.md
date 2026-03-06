@@ -63,10 +63,10 @@
 
 | | |
 |:--|:--|
-| <div align="center"><img src="https://icons8.com/fluency/96/null/brain.png" width="48"/><br><strong>🧠 Smart Knowledge Extraction</strong><br>Automatically captures and indexes web articles while filtering out noise.</div> | <div align="center"><img src="https://icons8.com/fluency/96/null/video.png" width="48"/><br><strong>📺 Multi-Media Support</strong><br>Native transcript extraction for YouTube and text recovery for PDFs.</div> |
-| <div align="center"><img src="https://icons8.com/fluency/96/null/artificial-intelligence.png" width="48"/><br><strong>🤖 AI-Powered Categorization</strong><br>Auto-detects topics (AI/ML, Finance, Dev) using local AI models.</div> | <div align="center"><img src="https://icons8.com/fluency/96/null/heatmap.png" width="48"/><br><strong>📊 Knowledge Heatmap</strong><br>Visual GitHub-style contribution grid of your reading habits.</div> |
-| <div align="center"><img src="https://icons8.com/fluency/96/null/chat.png" width="48"/><br><strong>💬 Conversational Intelligence</strong><br>Chat with your entire library using local LLMs via Ollama.</div> | <div align="center"><img src="https://icons8.com/fluency/96/null/link.png" width="48"/><br><strong>🔗 Numbered Citations</strong><br>Every AI response includes linked sources for verifiable truth.</div> |
-| <div align="center"><img src="https://icons8.com/fluency/96/null/paint-palette.png" width="48"/><br><strong>🎨 Premium UI</strong><br>Dynamic Light, Dark, and System themes with customizable accent colors.</div> | <div align="center"><img src="https://icons8.com/fluency/96/null/shield.png" width="48"/><br><strong>🔒 Privacy First</strong><br>100% local storage. Zero cloud. Zero telemetry. Your data stays yours.</div> |
+| <div align="center">🧠<br><strong>🧠 Smart Knowledge Extraction</strong><br>Automatically captures and indexes web articles while filtering out noise.</div> | <div align="center">📺<br><strong>📺 Multi-Media Support</strong><br>Native transcript extraction for YouTube and text recovery for PDFs.</div> |
+| <div align="center">🤖<br><strong>🤖 AI-Powered Categorization</strong><br>Auto-detects topics (AI/ML, Finance, Dev) using local AI models.</div> | <div align="center">📊<br><strong>📊 Knowledge Heatmap</strong><br>Visual GitHub-style contribution grid of your reading habits.</div> |
+| <div align="center">💬<br><strong>💬 Conversational Intelligence</strong><br>Chat with your entire library using local LLMs via Ollama.</div> | <div align="center">🔗<br><strong>🔗 Numbered Citations</strong><br>Every AI response includes linked sources for verifiable truth.</div> |
+| <div align="center">🎨<br><strong>🎨 Premium UI</strong><br>Dynamic Light, Dark, and System themes with customizable accent colors.</div> | <div align="center">🔒<br><strong>🔒 Privacy First</strong><br>100% local storage. Zero cloud. Zero telemetry. Your data stays yours.</div> |
 
 </div>
 
@@ -75,6 +75,7 @@
 ## 🏗️ Architecture
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'darkMode': true, 'background': 'transparent', 'primaryColor': '#e1f5fe', 'lineColor': '#ffffff', 'secondaryColor': '#e8f5e9', 'tertiaryColor': '#fff3e0'}}}%%
 flowchart TB
     subgraph Frontend["FRONTEND - Browser Extension"]
         direction TB
