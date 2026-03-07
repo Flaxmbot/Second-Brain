@@ -2,6 +2,11 @@
   "name": "internet-memory",
   "private": true,
   "version": "0.1.0",
+  "description": "Your AI-powered second brain. Automatically remembers everything you read online.",
+  "author": {
+    "name": "Flaxmbot",
+    "email": "flaxmbot@example.com"
+  },
   "main": "src-electron/main.js",
   "scripts": {
     "dev": "vite",
@@ -46,6 +51,7 @@
       }
     ],
     "win": {
+      "icon": "src-electron/icons/icon.png",
       "target": [
         {
           "target": "nsis",
@@ -69,14 +75,17 @@
       "target": [
         "dmg"
       ],
-      "category": "public.app-category.productivity"
+      "category": "public.app-category.productivity",
+      "icon": "src-electron/icons/icon.png"
     },
     "linux": {
       "target": [
         "AppImage",
         "deb"
       ],
-      "category": "Utility"
+      "category": "Utility",
+      "maintainer": "Flaxmbot <flaxmbot@example.com>",
+      "icon": "src-electron/icons/icon.png"
     }
   }
 }
