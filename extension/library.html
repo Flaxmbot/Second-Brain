@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Library - Internet Memory</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="sidepanel.css">
+    <link rel="stylesheet" href="library.css">
+</head>
+
+<body>
+    <div class="library-container">
+        <div class="library-header">
+            <div class="header-left">
+                <div class="logo">📚</div>
+                <h1>Library</h1>
+            </div>
+            <div class="header-right">
+                <button id="refresh-btn" class="icon-btn" title="Refresh">↻ Refresh</button>
+            </div>
+        </div>
+
+        <div class="library-toolbar">
+            <div class="search-wrapper">
+                <svg class="search-icon search-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8" class="search-glass"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" id="library-search" placeholder="Search memories...">
+            </div>
+            <div class="filter-wrapper">
+                <select id="sort-select" class="custom-select">
+                    <option value="recent">Most Recent</option>
+                    <option value="oldest">Oldest First</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="library-grid" class="library-grid">
+            <!-- Injected via JS -->
+            <div class="loading-state">
+                <div class="loading-spinner"></div>
+                <span>Loading memories...</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="library.js"></script>
+</body>
+
+</html>

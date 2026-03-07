@@ -1,13 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import App from './App';
+import './index.css';
 
-// Minimal app — Tauri desktop runs as a headless tray service.
-// All UI/UX lives in the Chrome extension.
 const root = document.getElementById('root');
 if (root) {
   ReactDOM.createRoot(root).render(
     <React.StrictMode>
-      <div />
+      <App />
     </React.StrictMode>
   );
 }

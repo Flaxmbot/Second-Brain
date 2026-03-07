@@ -2,22 +2,62 @@
   "name": "internet-memory",
   "private": true,
   "version": "0.1.0",
-  "type": "module",
+  "main": "src-electron/main.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
   },
   "dependencies": {
-    "@tauri-apps/api": "^2",
-    "@tauri-apps/plugin-opener": "^2",
+    "@lottiefiles/lottie-player": "^2.0.12",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "react-force-graph-2d": "^1.29.1",
+    "react-force-graph-3d": "^1.29.1",
+    "sql.js": "^1.11.0",
+    "three": "^0.183.2"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2",
     "@vitejs/plugin-react": "^4.6.0",
+    "electron": "^40.8.0",
+    "electron-builder": "^26.8.1",
     "vite": "^7.0.4"
+  },
+  "build": {
+    "appId": "com.internetmemory.app",
+    "productName": "Internet Memory",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "src-electron/**/*",
+      "dist/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "node_modules/sql.js/dist/sql-wasm.wasm",
+        "to": "sql-wasm.wasm"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }

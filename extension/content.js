@@ -41,8 +41,55 @@
             sendResponse({
                 url: window.location.href,
                 title: document.title,
-                html: document.documentElement.outerHTML
+                html: document.documentElement.outerHTML,
+                text: document.body ? document.body.innerText : ''
             });
         }
     });
+
+    // --- Reading Time Tracking ---
+    let timeSpentMs = 0;
+    let lastVisibleTime = Date.now();
+    let isTracking = document.visibilityState === 'visible';
+
+    function updateTimeSpent() {
+        if (isTracking) {
+            const now = Date.now();
+            timeSpentMs += (now - lastVisibleTime);
+            lastVisibleTime = now;
+        }
+    }
+
+    function syncTimeSpent() {
+        updateTimeSpent();
+        if (timeSpentMs > 0) {
+            chrome.runtime.sendMessage({
+                action: 'pingTimeSpent',
+                data: { url: window.location.href, timeMs: timeSpentMs }
+            });
+            timeSpentMs = 0; // reset after sending
+        }
+    }
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            isTracking = true;
+            lastVisibleTime = Date.now();
+        } else {
+            syncTimeSpent();
+            isTracking = false;
+        }
+    });
+
+    window.addEventListener('beforeunload', () => {
+        syncTimeSpent();
+    });
+
+    // Periodically sync every 30 seconds to be safe
+    setInterval(() => {
+        if (isTracking) {
+            syncTimeSpent();
+        }
+    }, 30000);
+
 })();

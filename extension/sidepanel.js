@@ -1,15 +1,32 @@
-const DEFAULT_API = 'http://localhost:11435';
+const DEFAULT_API = 'http://127.0.0.1:11435';
 let currentModel = '';
 let isStreaming = false;
+let currentStreamController = null;
 
 // ─── API Helper ──────────────────────────────────────────
 
 async function getApiConfig() {
-    const res = await chrome.storage.local.get(['apiUrl', 'apiToken']);
-    return {
-        apiUrl: res.apiUrl || DEFAULT_API,
-        apiToken: res.apiToken || ''
-    };
+    let res = await chrome.storage.local.get(['apiUrl', 'apiToken']);
+    let apiUrl = res.apiUrl || DEFAULT_API;
+    let apiToken = res.apiToken || '';
+
+    // Auto-fetch token if missing
+    if (!apiToken) {
+        try {
+            const tokenResp = await fetch(`${apiUrl}/api/auth/token`);
+            if (tokenResp.ok) {
+                const data = await tokenResp.json();
+                if (data.token) {
+                    apiToken = data.token;
+                    await chrome.storage.local.set({ apiToken });
+                }
+            }
+        } catch (e) {
+            console.warn('[Internet Memory] Failed to auto-fetch API token in sidepanel');
+        }
+    }
+
+    return { apiUrl, apiToken };
 }
 
 async function apiFetch(endpoint, options = {}) {
@@ -20,7 +37,8 @@ async function apiFetch(endpoint, options = {}) {
         ...options.headers
     };
 
-    if (!options.isStream) {
+    const isPost = ['POST', 'PUT', 'DELETE'].includes(options.method?.toUpperCase() || 'GET');
+    if (isPost) {
         headers['Content-Type'] = 'application/json';
     }
 
@@ -44,6 +62,11 @@ document.addEventListener('DOMContentLoaded', () => {
         item.addEventListener('click', () => switchView(item.dataset.tab));
     });
 
+    // Clear badge count
+    if (chrome && chrome.action && chrome.action.setBadgeText) {
+        chrome.action.setBadgeText({ text: '' });
+    }
+
     // Fullscreen button
     const fsBtn = document.getElementById('fullscreen-btn');
     if (fsBtn) {
@@ -52,10 +75,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Settings button
+    const settingsBtn = document.getElementById('settings-btn');
+    if (settingsBtn) {
+        settingsBtn.addEventListener('click', () => {
+            chrome.tabs.create({ url: chrome.runtime.getURL('options.html') });
+        });
+    }
+
     initChat();
     loadModels();
     checkConnection();
     loadChatHistory();
+
+    // Proactive AI: Summarize current page on open
+    setTimeout(triggerProactiveSummary, 1500);
 
     // Capture toggle logic
     const captureToggle = document.getElementById('capture-toggle-fs');
@@ -83,6 +117,145 @@ document.addEventListener('DOMContentLoaded', () => {
     chrome.storage.local.get(['theme', 'accentColor']).then(res => {
         applyTheme(res.theme || 'system', res.accentColor || '#00D4FF');
     });
+
+    // Add static event listeners for buttons that lost 'onclick' attributes
+    const webSearchBtn = document.getElementById('web-search-btn');
+    if (webSearchBtn) {
+        webSearchBtn.addEventListener('click', () => {
+            webSearchBtn.classList.toggle('active');
+        });
+    }
+
+    const sendBtn = document.getElementById('send-btn');
+    if (sendBtn) sendBtn.addEventListener('click', sendMessage);
+
+    const stopBtn = document.getElementById('stop-btn');
+    if (stopBtn) stopBtn.addEventListener('click', stopGeneration);
+
+    const newChatBtn = document.getElementById('new-chat-btn');
+    if (newChatBtn) newChatBtn.addEventListener('click', startNewChat);
+
+    const onboardingSettingsBtn = document.getElementById('onboarding-settings-btn');
+    if (onboardingSettingsBtn) onboardingSettingsBtn.addEventListener('click', () => window.open(chrome.runtime.getURL('options.html')));
+
+    const onboardingCompleteBtn = document.getElementById('onboarding-complete-btn');
+    if (onboardingCompleteBtn) onboardingCompleteBtn.addEventListener('click', completeOnboarding);
+
+    // Event delegation for dynamic elements
+    document.addEventListener('click', (e) => {
+        // AI Suggestion chips
+        if (e.target.classList.contains('suggestion')) {
+            const query = e.target.textContent;
+            const chatInput = document.getElementById('chat-input');
+            if (chatInput) {
+                chatInput.value = query;
+                sendMessage();
+                // Clear input after sending if it's from a suggestion click
+                setTimeout(() => { chatInput.value = ''; }, 10);
+            }
+        }
+    });
+    if (onboardingCompleteBtn) onboardingCompleteBtn.addEventListener('click', completeOnboarding);
+
+    // Global Event Delegation for dynamic elements
+    document.addEventListener('click', (e) => {
+        // Nav item conversation toggle
+        const navItem = e.target.closest('.nav-item[data-conversation-id]');
+        if (navItem) {
+            loadConversation(navItem.dataset.conversationId);
+            return;
+        }
+
+        // Suggestions
+        const suggestionBtn = e.target.closest('.suggestion');
+        if (suggestionBtn) {
+            if (suggestionBtn.dataset.url) {
+                window.open(suggestionBtn.dataset.url, '_blank');
+            } else {
+                askSuggestion(suggestionBtn);
+            }
+            return;
+        }
+
+        // Chat Delete
+        const deleteChatBtn = e.target.closest('.delete-chat-btn');
+        if (deleteChatBtn) {
+            e.stopPropagation();
+            const id = deleteChatBtn.dataset.id;
+            if (confirm('Are you sure you want to delete this chat?')) {
+                apiFetch(`/api/conversations/${id}`, { method: 'DELETE' })
+                    .then(res => {
+                        if (res.ok) {
+                            if (currentConversationId === id) startNewChat();
+                            loadChatHistory();
+                        }
+                    })
+                    .catch(e => console.error("Failed to delete chat", e));
+            }
+            return;
+        }
+
+        // Memory Delete
+        const deleteMemoryBtn = e.target.closest('.delete-memory-btn');
+        if (deleteMemoryBtn) {
+            e.stopPropagation();
+            const id = deleteMemoryBtn.dataset.id;
+            if (confirm('Are you sure you want to delete this memory?')) {
+                apiFetch(`/api/memory/${id}`, { method: 'DELETE' })
+                    .then(res => {
+                        if (res.ok) {
+                            loadTimeline();
+                            loadLibrary();
+                        }
+                    })
+                    .catch(e => console.error("Failed to delete memory", e));
+            }
+            return;
+        }
+
+        // Copy button
+        const copyBtn = e.target.closest('.copy-btn');
+        if (copyBtn) {
+            copyCode(copyBtn);
+            return;
+        }
+
+        // Citation link
+        const citationLink = e.target.closest('.citation-link');
+        if (citationLink) {
+            e.preventDefault();
+            scrollToSource(parseInt(citationLink.dataset.num, 10));
+            return;
+        }
+
+        // Timeline item
+        const timelineItem = e.target.closest('.timeline-item');
+        if (timelineItem && timelineItem.dataset.url) {
+            window.open(timelineItem.dataset.url, '_blank');
+            return;
+        }
+
+        // Article item
+        const articleItem = e.target.closest('.article-item');
+        if (articleItem && articleItem.dataset.id) {
+            openArticleDetail(articleItem.dataset.id);
+            return;
+        }
+
+        // Back button
+        const backBtn = e.target.closest('.back-btn');
+        if (backBtn && backBtn.dataset.view) {
+            switchView(backBtn.dataset.view);
+            return;
+        }
+
+        // Related item
+        const relatedItem = e.target.closest('.related-item');
+        if (relatedItem && relatedItem.dataset.id) {
+            openArticleDetail(relatedItem.dataset.id);
+            return;
+        }
+    });
 });
 
 function applyTheme(theme, accent) {
@@ -90,7 +263,6 @@ function applyTheme(theme, accent) {
 
     // Set Accent
     root.style.setProperty('--accent', accent);
-    // Rough glow/border derivatives
     root.style.setProperty('--accent-glow', `${accent}15`);
     root.style.setProperty('--accent-border', `${accent}30`);
 
@@ -100,24 +272,9 @@ function applyTheme(theme, accent) {
         theme = isDark ? 'dark' : 'light';
     }
 
-    if (theme === 'light') {
-        root.style.setProperty('--bg', '#ffffff');
-        root.style.setProperty('--bg-secondary', '#f8fafc');
-        root.style.setProperty('--bg-tertiary', '#f1f5f9');
-        root.style.setProperty('--border', '#e2e8f0');
-        root.style.setProperty('--text-primary', '#0f172a');
-        root.style.setProperty('--text-secondary', '#334155');
-        root.style.setProperty('--text-muted', '#64748b');
-    } else {
-        // Restore Default Dark
-        root.style.setProperty('--bg', '#0f1117');
-        root.style.setProperty('--bg-secondary', '#161923');
-        root.style.setProperty('--bg-tertiary', '#1e2230');
-        root.style.setProperty('--border', 'rgba(255,255,255,0.08)');
-        root.style.setProperty('--text-primary', '#ffffff');
-        root.style.setProperty('--text-secondary', '#cbd5e1');
-        root.style.setProperty('--text-muted', '#94a3b8');
-    }
+    document.body.setAttribute('data-theme', theme);
+    // Also set on documentElement for global selectors if needed
+    document.documentElement.setAttribute('data-theme', theme);
 }
 
 function completeOnboarding() {
@@ -140,6 +297,7 @@ function switchView(tabId) {
     if (tabId === 'timeline') loadTimeline();
     if (tabId === 'library') loadLibrary();
     if (tabId === 'stats') loadStats();
+
 
     // Reset detail view when switching tabs
     const detailView = document.getElementById('view-article-detail');
@@ -168,19 +326,38 @@ async function checkConnection() {
     const countEl = document.getElementById('memory-count');
     try {
         const resp = await apiFetch('/api/status');
+
+        if (resp.status === 401) {
+            if (statusEl) {
+                statusEl.className = 'conn-status disconnected';
+                statusEl.querySelector('span').textContent = 'Unauthorized (Check Token)';
+                statusEl.style.color = '#f44336';
+            }
+            return;
+        }
+
+        if (!resp.ok) throw new Error(`Server returned ${resp.status}`);
+
         const data = await resp.json();
         if (statusEl) {
             statusEl.className = 'conn-status connected';
-            statusEl.querySelector('span').textContent = data.ollama ? 'Connected · Ollama OK' : 'Connected · Ollama offline';
+            const isOllamaOk = data.ollama === true;
+            statusEl.querySelector('span').textContent = isOllamaOk ? 'Connected · Ollama OK' : 'Connected · Ollama offline';
+            statusEl.style.color = isOllamaOk ? 'var(--accent)' : '#ff9800';
         }
+
         // Load memory count
         const statsResp = await apiFetch('/api/stats');
-        const stats = await statsResp.json();
-        if (countEl) countEl.textContent = `${stats.total_articles || 0} memories`;
-    } catch {
+        if (statsResp.ok) {
+            const stats = await statsResp.json();
+            if (countEl) countEl.textContent = `${stats.total_articles || 0} memories`;
+        }
+    } catch (e) {
+        console.error('Connection check failed:', e);
         if (statusEl) {
             statusEl.className = 'conn-status disconnected';
             statusEl.querySelector('span').textContent = 'Server offline (Check Settings)';
+            statusEl.style.color = '#f44336';
         }
     }
 }
@@ -189,13 +366,24 @@ async function checkConnection() {
 
 async function loadModels() {
     try {
-        const resp = await apiFetch('/api/models');
-        const data = await resp.json();
+        const resp = await apiFetch('/api/ollama/models');
         const select = document.getElementById('model-select');
         if (!select) return;
+
+        if (resp.status === 401) {
+            select.innerHTML = '<option value="">Unauthorized</option>';
+            return;
+        }
+
+        if (!resp.ok) {
+            select.innerHTML = '<option value="">Error Loading</option>';
+            return;
+        }
+
+        const models = await resp.json();
         select.innerHTML = '';
-        const models = (data.models || []).filter(m => !m.name.includes('embed'));
-        if (models.length === 0) {
+
+        if (!Array.isArray(models) || models.length === 0) {
             select.innerHTML = '<option value="">No models</option>';
             return;
         }
@@ -207,7 +395,8 @@ async function loadModels() {
         });
         currentModel = select.value;
         select.addEventListener('change', () => { currentModel = select.value; });
-    } catch {
+    } catch (e) {
+        console.error('Load models failed:', e);
         const select = document.getElementById('model-select');
         if (select) select.innerHTML = '<option value="">Offline</option>';
     }
@@ -222,14 +411,27 @@ function initChat() {
 
     input.addEventListener('input', () => {
         sendBtn.disabled = !input.value.trim() || isStreaming;
-        input.style.height = 'auto';
-        input.style.height = Math.min(input.scrollHeight, 140) + 'px';
+
+        // Auto-resize logic
+        input.style.height = 'auto'; // Reset height to recalculate
+        const minHeight = 40; // Base height
+        const maxHeight = 160; // Max Expansion
+        const newHeight = Math.max(minHeight, Math.min(input.scrollHeight, maxHeight));
+        input.style.height = newHeight + 'px';
+
+        // Scroll adjustment if max height reached
+        if (input.scrollHeight > maxHeight) {
+            input.style.overflowY = 'auto';
+        } else {
+            input.style.overflowY = 'hidden';
+        }
+
         const cc = document.getElementById('char-count');
         if (cc) cc.textContent = input.value.length > 0 ? input.value.length : '';
     });
 
     input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && (!e.shiftKey || e.ctrlKey || e.metaKey)) {
+        if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             sendMessage();
         }
@@ -238,8 +440,11 @@ function initChat() {
 
 function askSuggestion(btn) {
     const input = document.getElementById('chat-input');
-    if (input) input.value = btn.textContent;
-    sendMessage();
+    if (input) {
+        input.value = btn.textContent;
+        sendMessage();
+        input.value = ''; // Ensure it's cleared
+    }
 }
 
 function searchWebFallback() {
@@ -250,6 +455,12 @@ function searchWebFallback() {
 
     const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
     window.open(searchUrl, '_blank');
+}
+
+function stopGeneration() {
+    if (currentStreamController) {
+        currentStreamController.abort();
+    }
 }
 
 let currentConversationId = null;
@@ -269,8 +480,11 @@ async function loadChatHistory() {
         }
 
         list.innerHTML = convs.map(c => `
-            <div class="nav-item ${c.id === currentConversationId ? 'active' : ''}" style="justify-content: space-between; padding: 8px 14px;" onclick="loadConversation('${c.id}')">
-                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px;">${escapeHtml(c.query)}</div>
+            <div class="nav-item ${c.id === currentConversationId ? 'active' : ''}" style="justify-content: space-between; padding: 8px 14px; position: relative;" data-conversation-id="${c.id}">
+                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;">${escapeHtml(c.query)}</div>
+                <button class="delete-chat-btn" data-id="${c.id}" style="background:none; border:none; color:var(--text-muted); cursor:pointer; padding:2px; display:flex; align-items:center; opacity: 0.6; transition: opacity 0.2s;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path></svg>
+                </button>
             </div>
         `).join('');
     } catch (e) {
@@ -281,6 +495,19 @@ async function loadChatHistory() {
 function startNewChat() {
     currentConversationId = null;
     currentConversationHistory = [];
+
+    const suggestions = [
+        "Summarize my recent readings",
+        "What are my latest saves?",
+        "Explain the core of my last research",
+        "What did I learn about AI today?",
+        "Give me a quick rundown of my history",
+        "Find my recent GitHub PRs",
+        "What was that recipe I looked at?",
+        "Summarize my last 3 articles"
+    ];
+    const picked = suggestions.sort(() => 0.5 - Math.random()).slice(0, 3);
+
     document.getElementById('chat-messages').innerHTML = `
         <div class="welcome-message">
             <div class="welcome-icon">
@@ -292,8 +519,7 @@ function startNewChat() {
             <h2>What would you like to recall?</h2>
             <p>I search everything you've read online and give you answers with sources.</p>
             <div class="suggestion-chips">
-                <button class="suggestion" onclick="askSuggestion(this)">What did I read about AI agents?</button>
-                <button class="suggestion" onclick="askSuggestion(this)">Summarize my recent readings</button>
+                ${picked.map(s => `<button class="suggestion">${s}</button>`).join('')}
             </div>
         </div>
     `;
@@ -303,7 +529,7 @@ function startNewChat() {
 async function loadConversation(id) {
     if (isStreaming) return;
     try {
-        const resp = await apiFetch(`/api/conversations/${id}/messages`);
+        const resp = await apiFetch(`/ api / conversations / ${id}/messages`);
         if (!resp.ok) throw new Error('Failed to load messages');
         const data = await resp.json();
 
@@ -351,99 +577,155 @@ async function sendMessage() {
     isStreaming = true;
     const thinkingEl = showThinking();
 
+    const stopBtn = document.getElementById('stop-btn');
+    const sendBtn = document.getElementById('send-btn');
+    if (stopBtn) stopBtn.style.display = 'flex';
+    if (sendBtn) sendBtn.style.display = 'none';
+
+    currentStreamController = new AbortController();
+
     // Create AI wrapper early for streaming
     const container = document.getElementById('chat-messages');
+    let div = null; // Declare early for catch block
 
     try {
+        // Get semantic toggle state
+        const toggle = document.getElementById('semantic-search-toggle');
+        const useSemanticSearch = toggle ? toggle.checked : true;
+
+        // Try getting current tab content
+        const activePage = await new Promise((resolve) => {
+            if (!chrome || !chrome.tabs) return resolve(null);
+            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                if (!tabs || tabs.length === 0) return resolve(null);
+                const tab = tabs[0];
+                if (!tab.url || tab.url.startsWith('chrome') || tab.url.startsWith('about:')) return resolve(null);
+
+                chrome.tabs.sendMessage(tab.id, { action: 'getPageContent' }, (response) => {
+                    if (chrome.runtime.lastError) {
+                        resolve(null);
+                    } else {
+                        resolve(response);
+                    }
+                });
+            });
+        });
+
         const reqBody = {
             query,
             model: currentModel || null,
             conversation_id: currentConversationId,
-            history: currentConversationHistory
+            history: currentConversationHistory,
+            use_semantic_search: useSemanticSearch,
+            active_page: activePage
         };
 
         const resp = await apiFetch('/api/query/stream', {
             method: 'POST',
             body: JSON.stringify(reqBody),
-            isStream: true
+            signal: currentStreamController.signal
         });
 
         if (!resp.ok) {
-            const errText = await resp.text();
-            throw new Error(errText);
+            const errText = await resp.text().catch(() => 'No error text');
+            if (resp.status === 400 && errText.includes('context length')) {
+                throw new Error("Query is too long or webpage is too giant for the AI context window.");
+            }
+            throw new Error(`Server Error (${resp.status}): ${errText}`);
         }
-
-        thinkingEl.remove();
-
-        // Create AI message skeleton
-        const div = document.createElement('div');
-        div.className = 'message ai streaming';
-        div.innerHTML = `
-            <div class="avatar">
-                <svg viewBox="0 0 24 24" fill="none"><path d="M12 2a4 4 0 0 1 4 4c0 .74-.2 1.44-.57 2.04A4 4 0 0 1 18 12a4 4 0 0 1-2.56 3.74A4 4 0 0 1 12 22a4 4 0 0 1-3.44-6.26A4 4 0 0 1 6 12a4 4 0 0 1 2.57-3.96A4.01 4.01 0 0 1 8 6a4 4 0 0 1 4-4z" stroke="white" stroke-width="2"/></svg>
-            </div>
-            <div class="content markdown-body"></div>
-            <div class="sources-container"></div>
-        `;
-        container.appendChild(div);
-
-        const contentEl = div.querySelector('.content');
-        const sourcesEl = div.querySelector('.sources-container');
-
-        let fullText = '';
-        let sources = [];
-
-        // Update history immediately so subsequent fast queries work
-        currentConversationHistory.push({ role: 'user', content: query });
 
         const reader = resp.body.getReader();
         const decoder = new TextDecoder();
 
+        // Update history immediately so subsequent fast queries work
+        currentConversationHistory.push({ role: 'user', content: query });
+
+        // Remove thinking indicator, add streaming container
+        if (thinkingEl && thinkingEl.parentNode) thinkingEl.remove();
+        div = document.createElement('div');
+        div.className = 'message ai streaming';
+        div.innerHTML = `
+            <div class="avatar"><svg viewBox="0 0 24 24"><path d="M12 2a4 4 0 0 1 4 4c0 .74-.2 1.44-.57 2.04A4 4 0 0 1 18 12a4 4 0 0 1-2.56 3.74A4 4 0 0 1 12 22a4 4 0 0 1-3.44-6.26A4 4 0 0 1 6 12a4 4 0 0 1 2.57-3.96A4.01 4.01 0 0 1 8 6a4 4 0 0 1 4-4z"/></svg></div>
+            <div class="content flex-col" style="display:flex; flex-direction:column; gap:8px; width:100%;">
+                <div class="markdown-body"></div>
+                <!-- Stylish thinking indicator dot bounce -->
+                <div class="thinking-dots-loader" style="display: flex; gap: 4px; padding: 4px 0; align-items: center; align-self: flex-start; margin-top: 4px; opacity: 0.8;">
+                   <div style="width:5px; height:5px; border-radius:50%; background:var(--accent); animation: bounce 1.4s infinite ease-in-out both;"></div>
+                   <div style="width:5px; height:5px; border-radius:50%; background:var(--accent); animation: bounce 1.4s infinite ease-in-out both; animation-delay: 0.16s;"></div>
+                   <div style="width:5px; height:5px; border-radius:50%; background:var(--accent); animation: bounce 1.4s infinite ease-in-out both; animation-delay: 0.32s;"></div>
+                </div>
+                <div class="sources-container"></div>
+            </div>
+        `;
+        container.appendChild(div);
+
+        const contentEl = div.querySelector('.markdown-body');
+        const sourcesEl = div.querySelector('.sources-container');
+        const dotsLoader = div.querySelector('.thinking-dots-loader');
+
+        let fullText = "";
+        let sources = [];
+        let buffer = '';
+
+        // Throttled UI Render to prevent Markdown/MathJax layout thrashing 
+        // which caused the previous "fked up" rendering issues.
+        let renderPending = false;
+        const flushRender = () => {
+            if (fullText) contentEl.innerHTML = renderMarkdown(fullText);
+            container.scrollTop = container.scrollHeight;
+            renderPending = false;
+        };
+
         while (true) {
-            const { value, done } = await reader.read();
+            const { done, value } = await reader.read();
             if (done) break;
 
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split('\\n');
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop(); // keep incomplete line in buffer
 
-            for (let i = 0; i < lines.length; i++) {
-                const line = lines[i];
-                if (line.startsWith('data: ')) {
+            for (const line of lines) {
+                if (line.trim().startsWith('data: ')) {
                     const dataStr = line.substring(6).trim();
-                    if (!dataStr) continue;
+                    if (dataStr === '[DONE]') continue;
 
                     try {
                         const data = JSON.parse(dataStr);
                         if (data.token) {
                             fullText += data.token;
-                            // Re-render markdown on each chunk
-                            contentEl.innerHTML = renderMarkdown(fullText);
-                            container.scrollTop = container.scrollHeight;
+                            if (!renderPending) {
+                                renderPending = true;
+                                requestAnimationFrame(flushRender); // buttery smooth rendering
+                            }
                         } else if (data.conversation_id) {
                             currentConversationId = data.conversation_id;
                         } else if (data.sources) {
                             sources = data.sources;
                             if (sources.length > 0) {
                                 sourcesEl.innerHTML = `
-                                    <div class="sources">
-                                        <div class="sources-label">Sources from your reading</div>
-                                        ${sources.map(s => `<a class="source-chip" href="${escapeHtml(s.url || '#')}" target="_blank" title="${escapeHtml(s.title || '')}">${escapeHtml(s.domain || s.title || 'Source')}</a>`).join('')}
+                                    <div class="sources" style="border-top:1px solid var(--border); padding-top:12px; margin-top:12px;">
+                                        <div class="sources-label" style="font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted); margin-bottom:8px;">References</div>
+                                        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                                          ${sources.map(s => `<a class="source-chip" href="${escapeHtml(s.url || '#')}" target="_blank" style="font-size:11px; padding:4px 10px; background:var(--bg-secondary); border:1px solid var(--border); border-radius:4px; color:var(--text-secondary); text-decoration:none; display:inline-block; transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent-border)'; this.style.color='var(--accent)';" onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-secondary)';">${escapeHtml(s.domain || s.title || 'Source')}</a>`).join('')}
+                                        </div>
                                     </div>
                                 `;
                             }
                         } else if (data.full_answer) {
-                            // Done event
                             fullText = data.full_answer;
                         } else if (data.error) {
                             throw new Error(data.error);
                         }
                     } catch (err) {
-                        // ignore unparseable data line during stream split edge cases
+                        // ignore broken json chunks
                     }
                 }
             }
         }
 
+        // Final render flush
+        flushRender();
+        if (dotsLoader) dotsLoader.remove();
         div.classList.remove('streaming');
         currentConversationHistory.push({ role: 'assistant', content: fullText });
 
@@ -456,43 +738,74 @@ async function sendMessage() {
             const lang = langMatch ? langMatch[1] : '';
             const header = document.createElement('div');
             header.className = 'code-header';
-            header.innerHTML = `<span class="code-lang">${lang || 'code'}</span><button class="copy-btn" onclick="copyCode(this)">Copy</button>`;
+            header.innerHTML = `<span class="code-lang">${lang || 'code'}</span><button class="copy-btn">Copy</button>`;
             pre.parentNode.insertBefore(header, pre);
         });
 
     } catch (e) {
-        if (thinkingEl && thinkingEl.parentNode) thinkingEl.remove();
-        if (div && div.parentNode) {
-            div.classList.remove('streaming');
-            div.classList.add('error');
-            const content = div.querySelector('.content');
-            if (content) {
+        if (e.name === 'AbortError') {
+            console.log('[Internet Memory] Stream aborted by user');
+            if (div && div.parentNode) div.classList.remove('streaming');
+        } else {
+            if (thinkingEl && thinkingEl.parentNode) thinkingEl.remove();
+            if (div && div.parentNode) {
+                div.classList.remove('streaming');
+                div.classList.add('error');
+                const content = div.querySelector('.content');
+                if (content) {
+                    let errorMsg = e.message;
+                    if (errorMsg === 'Failed to fetch' || errorMsg.includes('NetworkError')) {
+                        errorMsg = "Cannot connect to server. Is the Internet Memory app running?";
+                    }
+                    content.innerHTML = `<p style="color: var(--danger);"><strong>Error:</strong> ${errorMsg}</p>`;
+                }
+            } else {
                 let errorMsg = e.message;
                 if (errorMsg === 'Failed to fetch' || errorMsg.includes('NetworkError')) {
                     errorMsg = "Cannot connect to server. Is the Internet Memory app running?";
                 }
-                content.innerHTML = `<p style="color: var(--danger);"><strong>Error:</strong> ${errorMsg}</p>`;
+                addAIMessage(`**Error:** Could not get a response.\n\n\`${errorMsg}\``, []);
             }
-        } else {
-            let errorMsg = e.message;
-            if (errorMsg === 'Failed to fetch' || errorMsg.includes('NetworkError')) {
-                errorMsg = "Cannot connect to server. Is the Internet Memory app running?";
-            }
-            addAIMessage(`**Error:** Could not get a response.\n\n\`${errorMsg}\``, []);
         }
+    } finally {
+        if (stopBtn) stopBtn.style.display = 'none';
+        if (sendBtn) {
+            sendBtn.style.display = 'flex';
+            sendBtn.disabled = !input.value.trim();
+        }
+        isStreaming = false;
+        currentStreamController = null;
     }
-
-    isStreaming = false;
-    const sendBtn = document.getElementById('send-btn');
-    if (sendBtn) sendBtn.disabled = !input.value.trim();
 }
 
 function addUserMessage(text) {
     const container = document.getElementById('chat-messages');
     const div = document.createElement('div');
     div.className = 'message user';
-    div.innerHTML = `<div class="bubble">${escapeHtml(text)}</div>`;
+
+    div.innerHTML = `
+        <div class="bubble">
+            <div class="text-content">${escapeHtml(text)}</div>
+            <button class="expand-btn"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
+        </div>
+    `;
     container.appendChild(div);
+
+    // JS to detect if text overflows 3 lines
+    const contentDiv = div.querySelector('.text-content');
+    const btn = div.querySelector('.expand-btn');
+
+    setTimeout(() => {
+        if (contentDiv.scrollHeight > contentDiv.clientHeight + 2) {
+            btn.style.display = 'block';
+            btn.onclick = () => {
+                const isExpanded = contentDiv.classList.toggle('expanded');
+                btn.classList.toggle('expanded-btn', isExpanded);
+                container.scrollTop = container.scrollHeight;
+            };
+        }
+    }, 50);
+
     container.scrollTop = container.scrollHeight;
 }
 
@@ -533,7 +846,7 @@ function addAIMessage(markdown, sources) {
         const lang = langMatch ? langMatch[1] : '';
         const header = document.createElement('div');
         header.className = 'code-header';
-        header.innerHTML = `<span class="code-lang">${lang || 'code'}</span><button class="copy-btn" onclick="copyCode(this)">Copy</button>`;
+        header.innerHTML = `<span class="code-lang">${lang || 'code'}</span><button class="copy-btn">Copy</button>`;
         pre.parentNode.insertBefore(header, pre);
     });
 }
@@ -541,20 +854,44 @@ function addAIMessage(markdown, sources) {
 function showThinking() {
     const container = document.getElementById('chat-messages');
     const div = document.createElement('div');
-    div.className = 'message ai';
+    div.className = 'message ai streaming-indicator';
     div.innerHTML = `
     <div class="avatar">
       <svg viewBox="0 0 24 24" fill="none"><path d="M12 2a4 4 0 0 1 4 4c0 .74-.2 1.44-.57 2.04A4 4 0 0 1 18 12a4 4 0 0 1-2.56 3.74A4 4 0 0 1 12 22a4 4 0 0 1-3.44-6.26A4 4 0 0 1 6 12a4 4 0 0 1 2.57-3.96A4.01 4.01 0 0 1 8 6a4 4 0 0 1 4-4z" stroke="white" stroke-width="2"/></svg>
     </div>
     <div class="content">
-      <div class="thinking">
-        <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
-        <span class="thinking-label">Searching your memory...</span>
+      <div class="thinking" style="display: flex; align-items: center; gap: 12px;">
+        <div class="loading-spinner"></div>
+        <div class="thinking-steps" style="display: flex; flex-direction: column; gap: 4px;">
+            <span class="thinking-label current-step" id="loading-step-1" style="font-size: 13px; font-weight: 500; color: var(--accent);">Analyzing intent...</span>
+            <span class="thinking-label pending-step" id="loading-step-2" style="font-size: 11px; color: var(--text-muted); opacity: 0.6;">Retrieving memory context...</span>
+            <span class="thinking-label pending-step" id="loading-step-3" style="font-size: 11px; color: var(--text-muted); opacity: 0.6;">Generating response...</span>
+        </div>
       </div>
     </div>
   `;
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
+
+    // Simulate stepping through stages for better UX feel during network latency
+    setTimeout(() => {
+        const step1 = document.getElementById('loading-step-1');
+        const step2 = document.getElementById('loading-step-2');
+        if (step1 && step2) {
+            step1.style.fontSize = '11px'; step1.style.color = 'var(--text-muted)'; step1.style.fontWeight = 'normal'; step1.textContent = 'Intent analyzed ✓';
+            step2.style.fontSize = '13px'; step2.style.color = 'var(--accent)'; step2.style.fontWeight = '500'; step2.style.opacity = '1';
+        }
+    }, 600);
+
+    setTimeout(() => {
+        const step2 = document.getElementById('loading-step-2');
+        const step3 = document.getElementById('loading-step-3');
+        if (step2 && step3) {
+            step2.style.fontSize = '11px'; step2.style.color = 'var(--text-muted)'; step2.style.fontWeight = 'normal'; step2.textContent = 'Context retrieved ✓';
+            step3.style.fontSize = '13px'; step3.style.color = 'var(--accent)'; step3.style.fontWeight = '500'; step3.style.opacity = '1';
+        }
+    }, 1800);
+
     return div;
 }
 
@@ -611,8 +948,8 @@ function renderMarkdown(text) {
     });
 
     // Citations: [1], [2]
-    processed = processed.replace(/\[(\d+)\]/g, (match, num) => {
-        return `<a class="citation-link" href="#source-${num}" onclick="scrollToSource(${num}); return false;">${num}</a>`;
+    html = html.replace(/\[(\d+)\]/g, (match, num) => {
+        return `<a class="citation-link" href="#source-${num}" data-num="${num}">[${num}]</a>`;
     });
 
     return html;
@@ -664,6 +1001,14 @@ function formatTimeAgo(dateStr) {
     return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
+function formatTimeSpent(seconds) {
+    if (!seconds) return '⏱️ Just now';
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    if (m === 0) return `⏱️ ${s}s`;
+    return `⏱️ ${m}m ${s}s`;
+}
+
 // ─── Timeline ────────────────────────────────────────────
 
 async function loadTimeline() {
@@ -685,10 +1030,18 @@ async function loadTimeline() {
       <div class="timeline-group">
         <div class="timeline-date">${formatDate(day.date)}</div>
         ${day.articles.map(a => `
-          <div class="timeline-item" onclick="window.open('${escapeHtml(a.url)}','_blank')">
-            <div class="item-title">${escapeHtml(a.title)}</div>
-            <div class="item-meta">${escapeHtml(a.domain)} · ${Math.max(1, Math.ceil(a.word_count / 250))} min read</div>
-            ${a.summary ? `<div class="item-summary">${escapeHtml(a.summary)}</div>` : ''}
+          <div class="timeline-item" data-url="${escapeHtml(a.url)}">
+            <div class="item-title-row" style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+              <div class="item-title" style="flex:1;">${escapeHtml(a.title)}</div>
+              <button class="delete-memory-btn" data-id="${a.id}" style="background:none; border:none; color:var(--text-muted); cursor:pointer; padding:2px; display:flex; align-items:center; opacity:0.6; transition:opacity 0.2s;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path></svg>
+              </button>
+            </div>
+            <div class="item-meta">
+              ${escapeHtml(a.domain)} · ${formatTimeSpent(a.time_spent)}
+              ${a.tags ? `<span class="ai-tags-small"> · ${escapeHtml(a.tags)}</span>` : ''}
+            </div>
+            ${a.summary ? `<div class="item-summary"><span class="ai-sparkle">✨</span> ${escapeHtml(a.summary)}</div>` : ''}
           </div>
         `).join('')}
       </div>
@@ -728,15 +1081,20 @@ function renderArticles(container, articles) {
 
     container.innerHTML = `<div class="${wrapClass}">
     ${articles.map(a => `
-    <div class="article-item" onclick="openArticleDetail('${a.id}')">
-      <div class="art-header">
-        <span class="source-tag ${a.source_type || 'article'}">${a.source_type || 'article'}</span>
-        ${a.category ? `<span class="category-tag">${escapeHtml(a.category)}</span>` : ''}
-        <span class="art-domain">${escapeHtml(a.domain)}</span>
+    <div class="article-item" data-id="${a.id}">
+      <div class="art-header" style="justify-content: space-between;">
+        <div style="display:flex; align-items:center; gap:6px; flex:1; overflow:hidden;">
+            <span class="source-tag article">Memory</span>
+            ${a.tags ? a.tags.split(',').slice(0, 2).map(t => `<span class="category-tag">${escapeHtml(t.trim())}</span>`).join('') : ''}
+            <span class="art-domain">${escapeHtml(a.domain || (a.url ? new URL(a.url).hostname : 'local'))}</span>
+        </div>
+        <button class="delete-memory-btn" data-id="${a.id}" style="background:none; border:none; color:var(--text-muted); cursor:pointer; padding:4px; display:flex; align-items:center; opacity:0.5; transition:opacity 0.2s; flex-shrink:0;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path></svg>
+        </button>
       </div>
       <div class="art-title">${escapeHtml(a.title)}</div>
-      ${a.summary ? `<div class="art-summary">${escapeHtml(a.summary)}</div>` : ''}
-      <div class="art-meta">${Math.max(1, Math.ceil(a.word_count / 250))} min · ${formatTimeAgo(a.captured_at)}</div>
+      ${a.summary ? `<div class="art-summary"><strong>Bottom Line:</strong> ${escapeHtml(a.summary)}</div>` : ''}
+      <div class="art-meta">${formatTimeSpent(a.time_spent)} · ${formatTimeAgo(a.captured_at || a.timestamp)}</div>
     </div>
   `).join('')}
   </div>`;
@@ -761,7 +1119,7 @@ async function openArticleDetail(id) {
 
         detailView.innerHTML = `
             <div class="article-detail active">
-                <button class="back-btn" onclick="switchView('library')">
+                <button class="back-btn" data-view="library">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                     Back to Library
                 </button>
@@ -774,7 +1132,7 @@ async function openArticleDetail(id) {
                     </div>
                     <h2>${escapeHtml(article.title)}</h2>
                     <div class="detail-meta">
-                        Captured ${formatDate(article.captured_at)} · ${Math.max(1, Math.ceil(article.word_count / 250))} min read
+                        Captured ${formatDate(article.captured_at)} · ${formatTimeSpent(article.time_spent)} on page
                     </div>
                 </div>
 
@@ -796,7 +1154,7 @@ async function openArticleDetail(id) {
                 </div>
 
                 <div style="margin-top: 20px;">
-                    <button class="suggestion" style="width: 100%;" onclick="window.open('${escapeHtml(article.url)}', '_blank')">Open Original Source</button>
+                    <button class="suggestion" style="width: 100%;" data-url="${escapeHtml(article.url)}">Open Original Source</button>
                 </div>
             </div>
         `;
@@ -847,7 +1205,7 @@ async function loadRelated(articleId) {
         }
 
         container.innerHTML = related.map(r => `
-            <div class="related-item" onclick="openArticleDetail('${r.id}')">
+            <div class="related-item" data-id="${r.id}">
                 <div class="related-title">${escapeHtml(r.title)}</div>
                 <div class="related-domain">${escapeHtml(r.domain)}</div>
             </div>
@@ -988,4 +1346,104 @@ function initHeatmap(data) {
         cell.title = `${dateStr}: ${count} captures`;
         grid.appendChild(cell);
     }
+}
+
+// ─── Knowledge Graph ──────────────────────────────────────
+
+let graphInstance = null;
+
+async function loadGraph() {
+    const container = document.getElementById('3d-graph');
+    if (!container) return;
+
+    // Only init once if possible, or reset data
+    if (!graphInstance) {
+        // @ts-ignore
+        graphInstance = ForceGraph3D()(container)
+            .backgroundColor('#000000')
+            .nodeLabel('label')
+            .nodeAutoColorBy('group')
+            .linkColor(() => 'rgba(255,255,255,0.1)')
+            .linkDirectionalParticles(2)
+            .linkDirectionalParticleSpeed(d => 0.005)
+            .onNodeClick(node => {
+                // Aim at node from outside
+                const distance = 40;
+                const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
+
+                graphInstance.cameraPosition(
+                    { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }, // new position
+                    node, // lookAt ({x,y,z})
+                    3000  // ms transition duration
+                );
+            });
+    }
+
+    try {
+        const nodesResp = await apiFetch('/api/graph/nodes');
+        const edgesResp = await apiFetch('/api/graph/edges');
+
+        const nodesData = await nodesResp.json();
+        const edgesData = await edgesResp.json();
+
+        // Transform data for 3d-force-graph
+        // Nodes: { id, label, group }
+        // Links: { source, target }
+
+        const gData = {
+            nodes: nodesData.nodes.map(n => ({
+                id: n.id,
+                label: n.name || n.title || 'Concept',
+                group: n.type === 'concept' ? 1 : 2
+            })),
+            links: edgesData.edges.map(e => ({
+                source: e.source_id,
+                target: e.target_id
+            }))
+        };
+
+        graphInstance.graphData(gData);
+    } catch (err) {
+        console.error('Failed to load graph data:', err);
+    }
+}
+
+async function triggerProactiveSummary() {
+    // Only if we are in the chat view and no messages yet
+    const chatMessages = document.getElementById('chat-messages');
+    if (!chatMessages || chatMessages.children.length > 1) return; // 1 child is usually welcome message
+
+    try {
+        const activePage = await new Promise((resolve) => {
+            if (!chrome || !chrome.tabs) return resolve(null);
+            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                if (!tabs || tabs.length === 0) return resolve(null);
+                const tab = tabs[0];
+                if (!tab.url || tab.url.startsWith('chrome')) return resolve(null);
+                chrome.tabs.sendMessage(tab.id, { action: 'getPageContent' }, (resp) => {
+                    resolve(resp || null);
+                });
+            });
+        });
+
+        if (activePage && activePage.text && activePage.text.length > 500) {
+            // Add a special proactive chip
+            const container = document.querySelector('.suggestion-chips');
+            if (container) {
+                const btn = document.createElement('button');
+                btn.className = 'suggestion proactive';
+                btn.style.borderColor = 'var(--accent)';
+                btn.style.background = 'var(--accent-glow)';
+                btn.innerHTML = `<span style="margin-right: 6px;">✨</span> Summarize this page for me`;
+                btn.onclick = () => {
+                    const input = document.getElementById('chat-input');
+                    if (input) {
+                        input.value = "Summarize this page for me in 3 bullet points.";
+                        sendMessage();
+                    }
+                };
+                container.prepend(btn);
+            }
+        }
+    } catch (e) { }
 }

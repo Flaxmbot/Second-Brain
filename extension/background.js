@@ -1,6 +1,6 @@
 // Background service worker — handles auto-capture, dedup, side panel
 
-const API_BASE = 'http://localhost:11435';
+const API_BASE = 'http://127.0.0.1:11435';
 const capturedUrls = new Set(); // In-memory dedup for this session
 
 // Open side panel when toolbar icon is clicked
@@ -25,7 +25,24 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 });
 
 async function handleNewHighlight(url, text) {
-    const { apiToken = '', apiUrl = API_BASE } = await chrome.storage.local.get(['apiToken', 'apiUrl']);
+    let { apiToken = '', apiUrl = API_BASE } = await chrome.storage.local.get(['apiToken', 'apiUrl']);
+
+    // Auto-fetch token if missing
+    if (!apiToken) {
+        try {
+            const tokenResp = await fetch(`${apiUrl}/api/auth/token`);
+            if (tokenResp.ok) {
+                const data = await tokenResp.json();
+                if (data.token) {
+                    apiToken = data.token;
+                    await chrome.storage.local.set({ apiToken });
+                }
+            }
+        } catch (e) {
+            console.warn('[Internet Memory] Failed to auto-fetch API token');
+        }
+    }
+
     try {
         // 1. Get reference to article ID
         const checkResp = await fetch(`${apiUrl}/api/check-url`, {
@@ -90,15 +107,50 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         handleApiRequest(msg, sendResponse);
         return true; // async
     }
+    if (msg.action === 'pingTimeSpent') {
+        handlePingTimeSpent(msg.data);
+    }
 });
+
+async function handlePingTimeSpent({ url, timeMs }) {
+    try {
+        let { captureEnabled = true, apiToken = '', apiUrl = API_BASE } = await chrome.storage.local.get(['captureEnabled', 'apiToken', 'apiUrl']);
+        if (!captureEnabled || !apiToken) return;
+
+        await fetch(`${apiUrl}/api/memory/time`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiToken}` },
+            body: JSON.stringify({ url, additionalTimeMs: timeMs })
+        });
+    } catch (e) {
+        console.debug('[Internet Memory] Failed to ping time spent:', e);
+    }
+}
 
 // Auto-capture: check dedup, forward to server
 async function handleAutoCapture({ url, title, html }) {
-    const { captureEnabled = true, apiToken = '', apiUrl = API_BASE } = await chrome.storage.local.get(['captureEnabled', 'apiToken', 'apiUrl']);
+    let { captureEnabled = true, apiToken = '', apiUrl = API_BASE } = await chrome.storage.local.get(['captureEnabled', 'apiToken', 'apiUrl']);
     if (!captureEnabled) return;
 
     // Skip if already captured this session
     if (capturedUrls.has(url)) return;
+
+    // Auto-fetch token if missing
+    if (!apiToken) {
+        try {
+            const tokenResp = await fetch(`${apiUrl}/api/auth/token`);
+            if (tokenResp.ok) {
+                const data = await tokenResp.json();
+                if (data.token) {
+                    apiToken = data.token;
+                    await chrome.storage.local.set({ apiToken });
+                }
+            }
+        } catch (e) {
+            console.warn('[Internet Memory] Failed to auto-fetch API token');
+        }
+    }
+
     capturedUrls.add(url);
 
     try {
@@ -134,6 +186,9 @@ async function handleAutoCapture({ url, title, html }) {
                 chrome.action.setBadgeText({ text: count.toString() });
                 chrome.action.setBadgeBackgroundColor({ color: '#00D4FF' });
             });
+
+            // Broadcast success to sidepanels so they can refresh
+            chrome.runtime.sendMessage({ action: 'captureSuccess' }).catch(() => { });
         }
     } catch (e) {
         // Server not running — silently fail
@@ -144,7 +199,20 @@ async function handleAutoCapture({ url, title, html }) {
 // Manual capture from side panel
 async function handleManualCapture(data, sendResponse) {
     try {
-        const { apiToken = '', apiUrl = API_BASE } = await chrome.storage.local.get(['apiToken', 'apiUrl']);
+        let { apiToken = '', apiUrl = API_BASE } = await chrome.storage.local.get(['apiToken', 'apiUrl']);
+
+        // Auto-fetch token if missing
+        if (!apiToken) {
+            const tokenResp = await fetch(`${apiUrl}/api/auth/token`);
+            if (tokenResp.ok) {
+                const tokData = await tokenResp.json();
+                if (tokData.token) {
+                    apiToken = tokData.token;
+                    await chrome.storage.local.set({ apiToken });
+                }
+            }
+        }
+
         const resp = await fetch(`${apiUrl}/api/capture`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiToken}` },
@@ -160,7 +228,20 @@ async function handleManualCapture(data, sendResponse) {
 // Proxy API requests from side panel
 async function handleApiRequest({ method, endpoint, body }, sendResponse) {
     try {
-        const { apiToken = '', apiUrl = API_BASE } = await chrome.storage.local.get(['apiToken', 'apiUrl']);
+        let { apiToken = '', apiUrl = API_BASE } = await chrome.storage.local.get(['apiToken', 'apiUrl']);
+
+        // Auto-fetch token if missing
+        if (!apiToken) {
+            const tokenResp = await fetch(`${apiUrl}/api/auth/token`);
+            if (tokenResp.ok) {
+                const tokData = await tokenResp.json();
+                if (tokData.token) {
+                    apiToken = tokData.token;
+                    await chrome.storage.local.set({ apiToken });
+                }
+            }
+        }
+
         const opts = {
             method: method || 'GET',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiToken}` },

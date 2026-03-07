@@ -620,10 +620,21 @@ body {
 .katex-display {
     margin: 10px 0 !important;
     overflow-x: auto;
+    overflow-y: hidden;
+    max-width: 100%;
+    padding-bottom: 5px;
 }
 
 .katex {
     font-size: 1.05em !important;
+    white-space: normal;
+    word-break: break-word;
+}
+
+.katex-html {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
 }
 
 /* Sources */
@@ -946,9 +957,9 @@ body {
 /* ─── Stats ───────────────────────────────────────────── */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 12px;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
 }
 
 .stat-card {

@@ -1,32 +1,60 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Internet Memory</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="popup.css">
 </head>
+
 <body>
   <div class="popup">
     <div class="popup-header">
       <div class="popup-logo">🧠</div>
-      <h1>Internet Memory</h1>
+      <div>
+        <h1>Internet Memory</h1>
+        <div id="connectionStatus" class="connection">Checking connection...</div>
+      </div>
     </div>
 
-    <div id="status" class="status"></div>
-
+    <!-- Main Action -->
     <button id="captureBtn" class="capture-btn">
       <span class="btn-icon">📥</span>
-      Save to Memory
+      Save Current Page
     </button>
-
+    <div id="status" class="status"></div>
     <div id="result" class="result" style="display: none;"></div>
 
-    <div class="popup-footer">
-      <div id="connectionStatus" class="connection">Checking connection...</div>
+    <!-- Quick Shortcuts -->
+    <div class="shortcuts-grid">
+      <button id="open-chat-btn" class="shortcut-btn">
+        <span>💬</span> Chat
+      </button>
+      <button id="open-library-btn" class="shortcut-btn">
+        <span>📚</span> Library
+      </button>
+      <button id="open-options-btn" class="shortcut-btn">
+        <span>⚙️</span> Settings
+      </button>
+    </div>
+
+    <!-- Recent Memories -->
+    <div class="recent-section">
+      <div class="section-title">
+        <span>Recent Memories</span>
+        <button id="refresh-recents-btn" class="icon-btn" title="Refresh">↻</button>
+      </div>
+      <div id="recent-list" class="recent-list">
+        <!-- Injected via JS -->
+        <div class="recent-item skeleton"></div>
+        <div class="recent-item skeleton"></div>
+      </div>
     </div>
   </div>
 
   <script src="popup.js"></script>
 </body>
+
 </html>

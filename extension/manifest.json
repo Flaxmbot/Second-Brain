@@ -15,6 +15,7 @@
         "contextMenus"
     ],
     "host_permissions": [
+        "http://127.0.0.1:11435/*",
         "http://localhost:11435/*",
         "<all_urls>"
     ],

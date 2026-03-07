@@ -1,154 +1,548 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Internet Memory - Settings</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
     <style>
         :root {
             --bg: #0a0c14;
-            --bg-secondary: #131520;
-            --border: #1e2235;
-            --text: #ffffff;
-            --text-secondary: #94a3b8;
-            --accent: #00d4ff;
+            --bg-secondary: #12151f;
+            --bg-tertiary: #1a1e2c;
+            --bg-hover: #222738;
+            --accent: #00D4FF;
+            --accent-soft: #33DDFF;
+            --accent-glow: rgba(0, 212, 255, 0.06);
+            --accent-glow-strong: rgba(0, 212, 255, 0.14);
+            --accent-border: rgba(0, 212, 255, 0.2);
+            --accent-gradient: linear-gradient(135deg, #00D4FF 0%, #0088FF 50%, #6C5CE7 100%);
+            --text: #f0f2f5;
+            --text-secondary: #9da3b0;
+            --text-muted: #5c6370;
+            --border: rgba(255, 255, 255, 0.06);
+            --border-hover: rgba(255, 255, 255, 0.12);
+            --success: #34d399;
+            --warning: #fbbf24;
+            --danger: #f87171;
+            --danger-bg: rgba(248, 113, 113, 0.1);
+            --radius-lg: 16px;
+            --radius: 12px;
             --radius-sm: 8px;
+            --radius-xs: 6px;
+            --ease: cubic-bezier(0.22, 1, 0.36, 1);
+            --font: 'Inter', -apple-system, system-ui, sans-serif;
+            --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
             background-color: var(--bg);
             color: var(--text);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: var(--font);
             margin: 0;
-            padding: 40px;
+            padding: 40px 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            -webkit-font-smoothing: antialiased;
+            letter-spacing: -0.01em;
+            line-height: 1.6;
         }
 
         .container {
-            max-width: 600px;
-            margin: 0 auto;
+            width: 100%;
+            max-width: 680px;
             background: var(--bg-secondary);
             border: 1px solid var(--border);
-            padding: 30px;
-            border-radius: var(--radius-sm);
+            padding: 40px;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
         }
 
-        h1 {
-            margin-top: 0;
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--accent-gradient);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.25);
+        }
+
+        .header-text h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            letter-spacing: -0.02em;
+        }
+
+        .header-text p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        section {
+            margin-bottom: 36px;
+        }
+
+        section:last-of-type {
+            margin-bottom: 0;
+        }
+
+        h3 {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            font-weight: 600;
         }
 
         .form-group {
             margin-bottom: 20px;
         }
 
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
         label {
             display: block;
             margin-bottom: 8px;
             color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
         }
 
-        input {
+        .input-wrapper {
+            position: relative;
+        }
+
+        input[type="text"],
+        input[type="password"] {
             width: 100%;
-            padding: 10px;
-            box-sizing: border-box;
-            background: var(--bg);
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
             border: 1px solid var(--border);
             color: var(--text);
-            border-radius: 4px;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 13px;
+            transition: all 0.2s var(--ease);
+            outline: none;
         }
 
-        button {
-            background: var(--accent);
-            color: #000;
-            border: none;
-            padding: 10px 20px;
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow-strong);
+            background: var(--bg-hover);
+        }
+
+        input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Test Connection Button inside Input Wrapper */
+        .input-action-btn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            padding: 6px 12px;
+            background: var(--bg-hover);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xs);
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: 500;
             cursor: pointer;
-            border-radius: 4px;
-            font-weight: bold;
+            transition: all 0.2s;
         }
 
-        .status {
-            margin-top: 15px;
+        .input-action-btn:hover {
             color: var(--accent);
+            border-color: var(--accent-border);
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+
+        /* Custom Dropdown styling */
+        .custom-select {
+            -webkit-appearance: none;
+            appearance: none;
+            cursor: pointer;
+            transition: all 0.2s var(--ease);
+            outline: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%239da3b0' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+        }
+
+        .custom-select:hover,
+        .custom-select:focus {
+            border-color: var(--accent-border);
+            background-color: var(--bg-hover);
+        }
+
+        /* Custom Toggle Switch */
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            margin-bottom: 12px;
+            transition: border-color 0.2s;
+        }
+
+        .toggle-row:hover {
+            border-color: var(--border-hover);
+        }
+
+        .toggle-info label {
+            margin-bottom: 2px;
+            color: var(--text);
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 36px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--bg-hover);
+            transition: .3s cubic-bezier(0.4, 0.0, 0.2, 1);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 2px;
+            bottom: 2px;
+            background-color: var(--text-muted);
+            transition: .3s cubic-bezier(0.4, 0.0, 0.2, 1);
+            border-radius: 50%;
+        }
+
+        .toggle-switch input:checked+.slider {
+            background-color: var(--success);
+            border-color: var(--success);
+        }
+
+        .toggle-switch input:checked+.slider:before {
+            transform: translateX(16px);
+            background-color: white;
+        }
+
+        /* Color Picker */
+        .color-picker-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        input[type="color"] {
+            -webkit-appearance: none;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            padding: 0;
+            background: none;
+            overflow: hidden;
+            box-shadow: 0 0 0 1px var(--border);
+        }
+
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+
+        input[type="color"]::-webkit-color-swatch {
+            border: none;
+            border-radius: 50%;
+        }
+
+        /* Storage Box */
+        .storage-box {
+            background: var(--bg-tertiary);
+            padding: 20px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            margin-bottom: 16px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .stat-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+        }
+
+        .stat-val {
+            font-family: var(--font-mono);
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background: var(--accent-gradient);
+            color: #fff;
+            border: none;
+            padding: 14px 28px;
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s var(--ease);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: fit-content;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(0, 212, 255, 0.2);
+        }
+
+        .btn-danger {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--danger);
+            width: 100%;
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-danger:hover {
+            background: var(--danger-bg);
+            border-color: rgba(248, 113, 113, 0.3);
+        }
+
+        .footer-actions {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .status-msg {
+            font-size: 13px;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: var(--radius-xs);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .status-msg.show {
+            opacity: 1;
+        }
+
+        .status-msg.success {
+            background: rgba(52, 211, 153, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(52, 211, 153, 0.2);
+        }
+
+        .status-msg.error {
+            background: var(--danger-bg);
+            color: var(--danger);
+            border: 1px solid rgba(248, 113, 113, 0.2);
+        }
+
+        .status-msg.loading {
+            background: var(--accent-glow);
+            color: var(--accent);
+            border: 1px solid var(--accent-border);
         }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <h1>Internet Memory Settings</h1>
-        <p style="color: var(--text-secondary); margin-bottom: 24px;">Configure your personal knowledge engine.</p>
+        <div class="header">
+            <div class="logo-icon">🧠</div>
+            <div class="header-text">
+                <h1>Internet Memory Settings</h1>
+                <p>Configure your personal knowledge engine and AI connections.</p>
+            </div>
+        </div>
 
         <section>
-            <h3 style="margin-bottom: 12px; font-size: 16px;">Connection</h3>
+            <h3>Connection Hub</h3>
             <div class="form-group">
                 <label for="api-url">Server API URL</label>
-                <input type="text" id="api-url" placeholder="http://localhost:11435">
+                <div class="input-wrapper">
+                    <input type="text" id="api-url" placeholder="http://127.0.0.1:11435">
+                </div>
+                <p class="help-text">The local address where the Internet Memory desktop app is running.</p>
             </div>
             <div class="form-group">
-                <label for="api-token">API Token (Copy from System Tray Menu)</label>
-                <input type="password" id="api-token" placeholder="Paste your API Token here">
+                <label for="api-token">API Token</label>
+                <div class="input-wrapper">
+                    <input type="password" id="api-token" placeholder="Auto-fetches over localhost by default">
+                    <button class="input-action-btn" id="test-conn-btn">Test Connection</button>
+                </div>
+                <p class="help-text">Used to securely authenticate with your local database. (Copy from Desktop App
+                    System Tray)</p>
             </div>
         </section>
 
-        <section style="margin-top: 30px;">
-            <h3 style="margin-bottom: 12px; font-size: 16px;">AI Engine</h3>
+        <section>
+            <h3>AI Engine & Models</h3>
+            <div class="form-group">
+                <label for="ollama-model">Chat Model (Ollama)</label>
+                <select id="ollama-model" class="custom-select">
+                    <option value="">Loading models...</option>
+                </select>
+                <p class="help-text">The primary model used to answer questions and analyze your graph.</p>
+            </div>
             <div class="form-group">
                 <label for="embed-model">Embedding Model</label>
-                <input type="text" id="embed-model" placeholder="nomic-embed-text">
-                <p style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">Recommended:
-                    <code>nomic-embed-text</code> or <code>mxbai-embed-large</code>
-                </p>
+                <select id="embed-model" class="custom-select">
+                    <option value="">Loading models...</option>
+                </select>
+                <p class="help-text">Used for semantic search and finding connections between memories.</p>
             </div>
-            <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
-                <input type="checkbox" id="auto-categorize" style="width: auto;">
-                <label for="auto-categorize" style="margin-bottom: 0;">Auto-categorize captured pages</label>
+
+            <div class="toggle-row">
+                <div class="toggle-info">
+                    <label for="auto-categorize">Auto-Categorization</label>
+                    <p class="help-text" style="margin-top: 2px;">Automatically classify captured pages into knowledge
+                        domains.</p>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="auto-categorize">
+                    <span class="slider"></span>
+                </label>
             </div>
-            <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
-                <input type="checkbox" id="rerank-enabled" style="width: auto;">
-                <label for="rerank-enabled" style="margin-bottom: 0;">Use AI Re-ranking for Search (Slower but
-                    accurate)</label>
+
+            <div class="toggle-row">
+                <div class="toggle-info">
+                    <label for="rerank-enabled">Semantic Re-ranking</label>
+                    <p class="help-text" style="margin-top: 2px;">Uses AI to sort search results for perfect relevance
+                        (slower).</p>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="rerank-enabled">
+                    <span class="slider"></span>
+                </label>
             </div>
         </section>
 
-        <section style="margin-top: 30px;">
-            <h3 style="margin-bottom: 12px; font-size: 16px;">Appearance</h3>
+        <section>
+            <h3>Appearance</h3>
             <div class="form-group">
-                <label for="theme-select">Theme</label>
-                <select id="theme-select"
-                    style="width: 100%; padding: 10px; background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 4px;">
-                    <option value="system">System Default</option>
-                    <option value="light">Light</option>
-                    <option value="dark">Dark</option>
+                <label for="theme-select">Interface Theme</label>
+                <select id="theme-select" class="custom-select" style="max-width: 250px;">
+                    <option value="system">Follow System</option>
+                    <option value="light">Light Mode</option>
+                    <option value="dark">Dark Mode</option>
                 </select>
             </div>
-            <div class="form-group">
-                <label for="accent-color">Accent Color</label>
-                <input type="color" id="accent-color" style="height: 40px; padding: 2px;">
+            <div class="form-group" style="margin-top: 20px;">
+                <label for="accent-color">Brand Accent Color</label>
+                <div class="color-picker-wrapper">
+                    <input type="color" id="accent-color" value="#00D4FF">
+                    <span class="help-text" style="margin-top: 0; font-family: var(--font-mono);">Selected Accent</span>
+                </div>
             </div>
         </section>
 
-        <section style="margin-top: 30px;">
-            <h3 style="margin-bottom: 12px; font-size: 16px;">Storage & Privacy</h3>
-            <div
-                style="background: var(--bg); padding: 15px; border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 15px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span style="color: var(--text-secondary);">Database Size:</span>
-                    <span id="db-size-val">Calculating...</span>
+        <section>
+            <h3>Data & Privacy</h3>
+            <div class="storage-box">
+                <div class="stat-row">
+                    <span class="stat-label">Database Size</span>
+                    <span class="stat-val" id="db-size-val">Calculating...</span>
                 </div>
-                <div style="display: flex; justify-content: space-between;">
-                    <span style="color: var(--text-secondary);">Total Memories:</span>
-                    <span id="memories-count-val">...</span>
+                <div class="stat-row">
+                    <span class="stat-label">Total Memories Captured</span>
+                    <span class="stat-val" id="memories-count-val">...</span>
                 </div>
             </div>
-            <button id="clear-history-btn"
-                style="background: transparent; border: 1px solid var(--border); color: var(--text-secondary); width: 100%; margin-top: 10px;">Clear
-                All Memories & History</button>
-            <p style="font-size: 11px; color: var(--text-secondary); margin-top: 8px; text-align: center;">This action
-                is permanent and cannot be undone.</p>
+            <button id="clear-history-btn" class="btn-danger">Delete All Memories & History</button>
+            <p class="help-text" style="text-align: center;">This permanently removes all local embeddings and
+                highlights.</p>
         </section>
 
-        <div style="margin-top: 40px; display: flex; align-items: center; gap: 15px;">
-            <button id="save-btn">Save Settings</button>
-            <div id="status" class="status"></div>
+        <div class="footer-actions">
+            <div id="status" class="status-msg"></div>
+            <button id="save-btn" class="btn-primary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Save Settings
+            </button>
         </div>
     </div>
     <script src="options.js"></script>
